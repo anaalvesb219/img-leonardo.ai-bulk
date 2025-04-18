@@ -13,6 +13,10 @@ yarn.lock
 .env.test.local
 .env.production.local
 
+# Configurações da Vercel
+.vercel
+.now
+
 # Artefatos de build
 /dist
 /build
