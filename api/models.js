@@ -1,9 +1,9 @@
-import { config } from 'dotenv';
+const { config } = require('dotenv');
 
 // Carrega variáveis de ambiente
 config();
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end('Method Not Allowed');
 
   try {

@@ -1,11 +1,11 @@
-import { config } from 'dotenv';
-import fs from 'fs';
-import path from 'path';
+const { config } = require('dotenv');
+const fs = require('fs');
+const path = require('path');
 
 // Carrega variáveis de ambiente
 config();
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // GET: Retorna a chave API
   if (req.method === 'GET') {
     try {
