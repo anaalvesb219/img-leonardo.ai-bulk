@@ -208,7 +208,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Configura os event listeners para a chave API
   const saveKeyBtn = document.getElementById('save-key');
   if (saveKeyBtn) {
-    saveKeyBtn.addEventListener('click', handleSaveApiKey);
+    saveKeyBtn.addEventListener('click', handleApiKeyValidation);
+  } else {
+    console.error("Elemento saveKey nÃ£o encontrado!");
   }
   
   const toggleKeyBtn = document.getElementById('toggle-key');
@@ -229,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
     apiKeyInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        handleSaveApiKey();
+        handleApiKeyValidation();
       }
     });
   }
@@ -429,7 +431,9 @@ function initializeApp() {
     gallery: document.querySelector('.gallery'),
     generatedImagesCount: document.getElementById('generated-images-count'),
     clearGalleryButton: document.getElementById('clear-gallery'),
-    downloadAllButton: document.getElementById('download-all')
+    downloadAllButton: document.getElementById('download-all'),
+    // Evento para validar a API Key
+    validateApiKey: document.getElementById('validate-api-key')
   };
   
   // Inicializa o estado da aplicaÃ§Ã£o
@@ -460,7 +464,9 @@ function initializeApp() {
   
   // Inicializa os event listeners principais
   if (elements.saveKey) {
-    elements.saveKey.addEventListener('click', handleSaveApiKey);
+    elements.saveKey.addEventListener('click', handleApiKeyValidation);
+  } else {
+    console.error("Elemento saveKey nÃ£o encontrado!");
   }
   
   if (elements.generateButton) {
@@ -514,7 +520,7 @@ function setupEventListeners() {
   // Salvar a chave de API
   if (elements.saveKey) {
     console.log("Adicionando event listener ao botÃ£o saveKey");
-    elements.saveKey.addEventListener('click', handleSaveApiKey);
+    elements.saveKey.addEventListener('click', handleApiKeyValidation);
   } else {
     console.error("Elemento saveKey nÃ£o encontrado!");
   }
@@ -615,6 +621,11 @@ function setupEventListeners() {
       }
     });
   }
+
+  // Evento para validar a API Key
+  elements.validateApiKey.addEventListener('click', () => {
+    handleApiKeyValidation();
+  });
 }
 
 /**
@@ -646,9 +657,9 @@ function toggleApiKeyVisibility() {
 }
 
 /**
- * Lida com o clique no botÃ£o de validaÃ§Ã£o
+ * Lida com o clique no botão de validação
  */
-async function handleSaveApiKey() {
+async function handleApiKeyValidation() {
   const apiKeyInput = document.getElementById('api-key');
   const apiKey = apiKeyInput.value.trim();
   
@@ -668,22 +679,22 @@ async function handleSaveApiKey() {
     if (window.leonardoAPI && typeof window.leonardoAPI.setApiKey === 'function') {
       window.leonardoAPI.setApiKey(apiKey);
       
-      // Realiza uma requisiÃ§Ã£o de teste para validar a chave
+      // Realiza uma requisição de teste para validar a chave
       const isValid = await window.leonardoAPI.validateApiKey();
       
       if (isValid) {
         // Salva a chave no arquivo .env
         await salvarChaveApiNoArquivo(apiKey);
         
-        showApiKeyValidationFeedback(true, 'Chave API vÃ¡lida!');
+        showApiKeyValidationFeedback(true, 'Chave API válida!');
         
-        // Dispara evento de validaÃ§Ã£o
+        // Dispara evento de validação
         const event = new CustomEvent('keyValidated', {
           detail: { key: apiKey, valid: true }
         });
         document.dispatchEvent(event);
       } else {
-        showApiKeyValidationFeedback(false, 'Chave API invÃ¡lida. Verifique e tente novamente.');
+        showApiKeyValidationFeedback(false, 'Chave API inválida. Verifique e tente novamente.');
       }
     } else {
       showApiKeyValidationFeedback(false, 'Erro ao inicializar o gerenciador de API.');
@@ -692,15 +703,15 @@ async function handleSaveApiKey() {
     console.error('Erro ao validar a chave API:', error);
     showApiKeyValidationFeedback(false, 'Erro ao validar a chave API. Verifique o console.');
   } finally {
-    // Restaura o botÃ£o
+    // Restaura o botão
     saveKeyBtn.innerHTML = originalBtnText;
     saveKeyBtn.disabled = false;
   }
 }
 
 /**
- * Exibe feedback visual sobre a validaÃ§Ã£o da chave API
- * @param {boolean} isValid - Se a chave Ã© vÃ¡lida
+ * Exibe feedback visual sobre a validação da chave API
+ * @param {boolean} isValid - Se a chave é válida
  * @param {string} message - Mensagem a ser exibida
  */
 function showApiKeyValidationFeedback(isValid, message) {
@@ -720,7 +731,7 @@ function showApiKeyValidationFeedback(isValid, message) {
   const feedbackId = 'api-key-feedback';
   let feedbackEl = document.getElementById(feedbackId);
   
-  // Se jÃ¡ existe, remove para recriar
+  // Se já existe, remove para recriar
   if (feedbackEl) feedbackEl.remove();
   
   // Criar novo elemento de feedback
@@ -732,7 +743,7 @@ function showApiKeyValidationFeedback(isValid, message) {
     <span>${message}</span>
   `;
   
-  // Inserir apÃ³s o container da chave
+  // Inserir após o container da chave
   keyContainer.parentNode.insertBefore(feedbackEl, keyContainer.nextSibling);
   
   // Configurar timer para remover feedback depois de um tempo
@@ -740,7 +751,7 @@ function showApiKeyValidationFeedback(isValid, message) {
 }
 
 /**
- * Limpa o feedback visual da validaÃ§Ã£o da chave API
+ * Limpa o feedback visual da validação da chave API
  */
 function resetApiKeyFeedback() {
   const apiKeyInput = document.getElementById('api-key');
@@ -766,14 +777,14 @@ function resetApiKeyFeedback() {
 }
 
 /**
- * Carrega os modelos disponÃ­veis da API Leonardo
+ * Carrega os modelos disponíveis da API Leonardo
  */
 async function loadModels() {
   console.log("Carregando modelos...");
   
-  // Verificar se a variÃ¡vel elements estÃ¡ definida
+  // Verificar se a variável elements está definida
   if (typeof elements === 'undefined') {
-    console.error("Objeto 'elements' nÃ£o estÃ¡ definido. Executando initializeApp() primeiro.");
+    console.error("Objeto 'elements' não está definido. Executando initializeApp() primeiro.");
     initializeApp();
     
     // Verificar novamente se o objeto elements foi inicializado corretamente
@@ -783,9 +794,9 @@ async function loadModels() {
     }
   }
   
-  // Verificar se os elementos necessÃ¡rios existem
+  // Verificar se os elementos necessários existem
   if (!elements.modelSelect) {
-    console.error("Elemento modelSelect nÃ£o encontrado");
+    console.error("Elemento modelSelect não encontrado");
     return;
   }
   
@@ -801,7 +812,7 @@ async function loadModels() {
   elements.modelSelect.innerHTML = '<option value="">Carregando modelos...</option>';
   
   try {
-    // ObtÃ©m modelos do endpoint especÃ­fico que criamos no servidor
+    // Obtém modelos do endpoint específico que criamos no servidor
     console.log("Obtendo modelos via endpoint /proxy/models...");
     const response = await fetch('/proxy/models');
     
@@ -812,8 +823,8 @@ async function loadModels() {
     const data = await response.json();
     
     if (!data || !Array.isArray(data.models)) {
-      console.warn("Resposta do endpoint nÃ£o contÃ©m array de modelos:", data);
-      throw new Error("Formato de resposta invÃ¡lido");
+      console.warn("Resposta do endpoint não contém array de modelos:", data);
+      throw new Error("Formato de resposta inválido");
     }
     
     const models = data.models;
@@ -821,7 +832,7 @@ async function loadModels() {
     
     // Verifica se o elemento modelSelect ainda existe
     if (!elements.modelSelect) {
-      console.error("Elemento modelSelect nÃ£o encontrado apÃ³s carregar modelos");
+      console.error("Elemento modelSelect não encontrado após carregar modelos");
       return;
     }
     
@@ -861,15 +872,15 @@ async function loadModels() {
     
   } catch (error) {
     console.error("Erro ao carregar modelos:", error);
-    showNotification('Falha ao carregar modelos. Usando modelos padrÃ£o.', 'warning');
+    showNotification('Falha ao carregar modelos. Usando modelos padrão.', 'warning');
     
     // Verificar novamente se o elemento modelSelect existe
     if (!elements.modelSelect) {
-      console.error("Elemento modelSelect nÃ£o estÃ¡ disponÃ­vel para carregar modelos padrÃ£o");
+      console.error("Elemento modelSelect não está disponível para carregar modelos padrão");
       return;
     }
     
-    // Usa modelos padrÃ£o em caso de erro
+    // Usa modelos padrão em caso de erro
     const defaultModels = [
       { id: 'de7d3faf-762f-48e0-b3b7-9d0ac3a3fcf3', name: 'Leonardo Phoenix 1.0', modelType: 'Phoenix' },
       { id: '6b645e3a-d64f-4341-a6d8-7a3690fbf042', name: 'Leonardo Phoenix 0.9', modelType: 'Phoenix' },
@@ -884,12 +895,12 @@ async function loadModels() {
       { id: '1dd50843-d653-4516-a8e3-f0238ee453ff', name: 'Flux Schnell', modelType: 'Flux' }
     ];
     
-    // Simula um pequeno atraso para dar feedback ao usuÃ¡rio
+    // Simula um pequeno atraso para dar feedback ao usuário
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Usa modelos padrÃ£o para contornar problemas de API
+    // Usa modelos padrão para contornar problemas de API
     const models = defaultModels;
-    console.log(`Usando ${models.length} modelos padrÃ£o porque o servidor falhou`);
+    console.log(`Usando ${models.length} modelos padrão porque o servidor falhou`);
     
     try {
       // Limpa o select de modelos
@@ -923,7 +934,7 @@ async function loadModels() {
         elements.modelSelect.appendChild(optgroup);
       });
     } catch (innerError) {
-      console.error("Erro ao carregar modelos padrÃ£o:", innerError);
+      console.error("Erro ao carregar modelos padrão:", innerError);
     }
     
   } finally {
@@ -942,13 +953,13 @@ async function loadModels() {
 }
 
 /**
- * ObtÃ©m as dimensÃµes selecionadas
+ * Obtém as dimensões selecionadas
  * @returns {Object} Objeto com width e height
  */
 function getSelectedDimensions() {
   const dimensionValue = elements.presetDimensions.value;
   if (!dimensionValue) {
-    showNotification('Selecione uma dimensÃ£o para a imagem', 'error');
+    showNotification('Selecione uma dimensão para a imagem', 'error');
     return null;
   }
   
@@ -957,7 +968,7 @@ function getSelectedDimensions() {
 }
 
 /**
- * Inicia o processo de geraÃ§Ã£o de imagens
+ * Inicia o processo de geração de imagens
  */
 async function startImageGeneration() {
   // Valida os inputs
@@ -975,23 +986,23 @@ async function startImageGeneration() {
 
   const dimensions = getSelectedDimensions();
   if (!dimensions) {
-    showNotification('error', 'Por favor, selecione as dimensÃµes da imagem.');
+    showNotification('error', 'Por favor, selecione as dimensões da imagem.');
     return;
   }
   
   const numImages = parseInt(elements.numImages.value) || 1;
   if (numImages > 4) {
-    showNotification('warning', 'MÃ¡ximo de 4 imagens por prompt permitido. O valor serÃ¡ ajustado.');
+    showNotification('warning', 'Máximo de 4 imagens por prompt permitido. O valor será ajustado.');
     elements.numImages.value = 4;
   }
 
-  // ValidaÃ§Ã£o adicional para garantir que todos os campos obrigatÃ³rios estejam preenchidos
+  // Validação adicional para garantir que todos os campos obrigatórios estejam preenchidos
   if (!prompts[0] || !modelId || !dimensions.width || !dimensions.height) {
-    showNotification('error', 'Preencha todos os campos obrigatÃ³rios.');
+    showNotification('error', 'Preencha todos os campos obrigatórios.');
     return;
   }
 
-  // ValidaÃ§Ã£o para modelos Flux
+  // Validação para modelos Flux
   const fluxModelIds = [
     'b2614463-296c-462a-9586-aafdb8f00e36', // Flux Dev (Flux Precision)
     '1dd50843-d653-4516-a8e3-f0238ee453ff'  // Flux Schnell (Flux Speed)
@@ -1003,19 +1014,19 @@ async function startImageGeneration() {
       return;
     }
     
-    // ValidaÃ§Ã£o para contraste do Flux
+    // Validação para contraste do Flux
     if (elements.fluxContrast) {
       const validContrasts = [1.0, 1.3, 1.8, 2.5, 3, 3.5, 4, 4.5];
       const selectedContrast = parseFloat(elements.fluxContrast.value);
       
       if (!validContrasts.includes(selectedContrast)) {
-        showNotification('warning', 'Valor de contraste invÃ¡lido para Flux. Ajustando para 3.5 (MÃ©dio).');
+        showNotification('warning', 'Valor de contraste inválido para Flux. Ajustando para 3.5 (Médio).');
         elements.fluxContrast.value = "3.5";
       }
     }
   }
 
-  // ValidaÃ§Ã£o para PhotoReal v2
+  // Validação para PhotoReal v2
   if (elements.photoRealCheckbox && elements.photoRealCheckbox.checked) {
     const xlModelsIds = [
       'aa77f04e-3eec-4034-9c07-d0f619684628', // Leonardo Kino XL
@@ -1029,7 +1040,7 @@ async function startImageGeneration() {
     }
   }
 
-  // ValidaÃ§Ã£o para Phoenix
+  // Validação para Phoenix
   if (elements.phoenixCheckbox && elements.phoenixCheckbox.checked) {
     const phoenixModelIds = [
       'de7d3faf-762f-48e0-b3b7-9d0ac3a3fcf3', // Leonardo Phoenix 1.0
@@ -1041,7 +1052,7 @@ async function startImageGeneration() {
       return;
     }
     
-    // ValidaÃ§Ã£o para Alchemy e contraste
+    // Validação para Alchemy e contraste
     if (elements.phoenixAlchemyCheckbox && elements.phoenixAlchemyCheckbox.checked) {
       const contrast = parseFloat(elements.phoenixContrast.value);
       if (contrast < 2.5) {
@@ -1051,12 +1062,12 @@ async function startImageGeneration() {
     }
   }
 
-  // Atualiza a interface para o modo de geraÃ§Ã£o
+  // Atualiza a interface para o modo de geração
   updateInterfaceForGeneration(true);
   clearGeneratedImages();
 
   try {
-    // Utiliza a funÃ§Ã£o processPrompts para gerar as imagens
+    // Utiliza a função processPrompts para gerar as imagens
     const stats = await processPrompts(
       prompts, 
       modelId, 
@@ -1066,21 +1077,21 @@ async function startImageGeneration() {
       (percentage, message) => {
         updateProgressBar(percentage, message);
       },
-      // Callback quando uma imagem Ã© gerada
+      // Callback quando uma imagem é gerada
       (imageUrl, prompt) => {
         console.log(`Imagem gerada para "${truncateText(prompt, 30)}"`);
       }
     );
 
     // Atualiza a interface com os resultados
-    const message = `GeraÃ§Ã£o concluÃ­da: ${stats.success} sucesso, ${stats.failed} falhas.`;
+    const message = `Geração concluída: ${stats.success} sucesso, ${stats.failed} falhas.`;
     showNotification('success', message);
     console.log(message);
   } catch (error) {
-    console.error('Erro durante a geraÃ§Ã£o de imagens:', error);
-    showNotification('error', 'Ocorreu um erro durante a geraÃ§Ã£o de imagens. Verifique o console para mais detalhes.');
+    console.error('Erro durante a geração de imagens:', error);
+    showNotification('error', 'Ocorreu um erro durante a geração de imagens. Verifique o console para mais detalhes.');
   } finally {
-    // Restaura a interface apÃ³s a geraÃ§Ã£o
+    // Restaura a interface após a geração
     updateInterfaceForGeneration(false);
   }
 }
@@ -1090,7 +1101,7 @@ async function startImageGeneration() {
  */
 async function downloadAllImages() {
   if (state.generatedImages.length === 0) {
-    showNotification('NÃ£o hÃ¡ imagens para baixar', 'warning');
+    showNotification('Não há imagens para baixar', 'warning');
     return;
   }
 
@@ -1159,8 +1170,8 @@ function loadScript(url) {
 }
 
 /**
- * Cria um placeholder para uma imagem que estÃ¡ sendo gerada
- * @param {string} id - ID Ãºnico para o placeholder
+ * Cria um placeholder para uma imagem que está sendo gerada
+ * @param {string} id - ID único para o placeholder
  * @param {string} prompt - O prompt usado para gerar a imagem
  */
 function createImagePlaceholder(id, prompt) {
@@ -1209,13 +1220,13 @@ function updateImagePlaceholderWithError(id, errorMessage) {
 }
 
 /**
- * Adiciona uma imagem Ã  galeria e ao estado da aplicaÃ§Ã£o
+ * Adiciona uma imagem  galeria e ao estado da aplicação
  * @param {object} image - Dados da imagem (url, id)
  * @param {string} prompt - O prompt usado para gerar a imagem
  */
 function addImageToGallery(image, prompt) {
   if (!image || !image.url) {
-    console.error("Tentativa de adicionar imagem sem URL Ã  galeria");
+    console.error("Tentativa de adicionar imagem sem URL  galeria");
     return;
   }
 
@@ -1243,7 +1254,7 @@ function addImageToGallery(image, prompt) {
     </div>
   `;
   
-  // Adiciona event listeners para os botÃµes
+  // Adiciona event listeners para os botões
   imageCard.querySelector('.download-image').addEventListener('click', (e) => {
     const url = e.currentTarget.getAttribute('data-url');
     const id = e.currentTarget.getAttribute('data-id');
@@ -1255,27 +1266,27 @@ function addImageToGallery(image, prompt) {
     window.open(url, '_blank');
   });
   
-  // Adiciona o card Ã  galeria
+  // Adiciona o card  galeria
   if (elements && elements.gallery) {
     elements.gallery.appendChild(imageCard);
   } else {
-    // Tenta adicionar Ã  galeria pelo ID como alternativa
+    // Tenta adicionar  galeria pelo ID como alternativa
     const galleryElement = document.getElementById('image-gallery');
     if (galleryElement) {
       galleryElement.appendChild(imageCard);
     } else {
-      console.error("Elemento gallery nÃ£o encontrado para adicionar imagem");
+      console.error("Elemento gallery não encontrado para adicionar imagem");
     }
   }
   
-  // Mostra o botÃ£o de download se houver pelo menos uma imagem
+  // Mostra o botão de download se houver pelo menos uma imagem
   if (elements && elements.downloadAllButton && state && state.generatedImages.length > 0) {
     elements.downloadAllButton.classList.remove('hidden');
   }
 }
 
 /**
- * Baixa uma Ãºnica imagem
+ * Baixa uma única imagem
  * @param {string} url - URL da imagem
  * @param {string} id - ID da imagem
  */
@@ -1296,16 +1307,16 @@ async function downloadSingleImage(url, id) {
     // Libera o objeto URL
     URL.revokeObjectURL(downloadUrl);
     
-    showNotification('Download concluÃ­do!', 'success');
+    showNotification('Download concluído!', 'success');
   } catch (error) {
     showNotification(`Erro ao baixar: ${error.message}`, 'error');
   }
 }
 
 /**
- * Trunca um texto para um comprimento mÃ¡ximo
+ * Trunca um texto para um comprimento máximo
  * @param {string} text - Texto a ser truncado
- * @param {number} maxLength - Comprimento mÃ¡ximo
+ * @param {number} maxLength - Comprimento máximo
  * @returns {string} Texto truncado
  */
 function truncateText(text, maxLength) {
@@ -1314,15 +1325,15 @@ function truncateText(text, maxLength) {
 }
 
 /**
- * Mostra uma notificaÃ§Ã£o para o usuÃ¡rio
+ * Mostra uma notificação para o usuário
  * @param {string} message - Mensagem a ser exibida
- * @param {string} type - Tipo de notificaÃ§Ã£o (success, error, warning, info)
+ * @param {string} type - Tipo de notificação (success, error, warning, info)
  */
 function showNotification(message, type = 'info') {
-  // Procura por uma notificaÃ§Ã£o existente
+  // Procura por uma notificação existente
   let notification = document.querySelector('.notification');
   
-  // Se nÃ£o existir, cria uma nova
+  // Se não existir, cria uma nova
   if (!notification) {
     notification = document.createElement('div');
     notification.className = 'notification';
@@ -1332,7 +1343,7 @@ function showNotification(message, type = 'info') {
   // Define a classe de acordo com o tipo
   notification.className = `notification ${type}`;
   
-  // Define o conteÃºdo
+  // Define o conteúdo
   notification.innerHTML = `
     <div class="notification-content">
       <i class="fas ${getNotificationIcon(type)}"></i>
@@ -1340,19 +1351,19 @@ function showNotification(message, type = 'info') {
     </div>
   `;
   
-  // Mostra a notificaÃ§Ã£o
+  // Mostra a notificação
   notification.classList.add('show');
   
-  // Remove apÃ³s 3 segundos
+  // Remove após 3 segundos
   setTimeout(() => {
     notification.classList.remove('show');
   }, 3000);
 }
 
 /**
- * Retorna o Ã­cone adequado para o tipo de notificaÃ§Ã£o
- * @param {string} type - Tipo de notificaÃ§Ã£o
- * @returns {string} Classe do Ã­cone FontAwesome
+ * Retorna o ícone adequado para o tipo de notificação
+ * @param {string} type - Tipo de notificação
+ * @returns {string} Classe do ícone FontAwesome
  */
 function getNotificationIcon(type) {
   switch (type) {
@@ -1368,15 +1379,15 @@ function getNotificationIcon(type) {
  * Processa uma lista de prompts e gera imagens para cada um
  * @param {Array<string>} prompts - Lista de prompts para gerar imagens
  * @param {string} modelId - ID do modelo a ser usado
- * @param {Object} dimensions - DimensÃµes das imagens {width, height}
- * @param {number} numImages - NÃºmero de imagens a serem geradas
+ * @param {Object} dimensions - Dimensões das imagens {width, height}
+ * @param {number} numImages - Número de imagens a serem geradas
  * @param {Function} onProgress - Callback para atualizar o progresso
  * @param {Function} onImageGenerated - Callback chamado quando uma imagem for gerada
- * @returns {Promise<{success: number, failed: number}>} - EstatÃ­sticas da geraÃ§Ã£o
+ * @returns {Promise<{success: number, failed: number}>} - Estatísticas da geração
  */
 async function processPrompts(prompts, modelId, dimensions, numImages, onProgress, onImageGenerated) {
   let stats = { success: 0, failed: 0 };
-  // Inicializa a variÃ¡vel de cancelamento
+  // Inicializa a variável de cancelamento
   window.cancelGeneration = false;
   
   // Configura a chave da API
@@ -1385,7 +1396,7 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
   // Processa cada prompt sequencialmente
   for (let i = 0; i < prompts.length; i++) {
     if (window.cancelGeneration) {
-      console.log('Processo de geraÃ§Ã£o cancelado');
+      console.log('Processo de geração cancelado');
       break;
     }
     
@@ -1397,26 +1408,26 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
       const progress = Math.floor(((i + 1) / prompts.length) * 100);
       onProgress(progress, `Gerando imagem ${i + 1} de ${prompts.length}: "${truncateText(prompt, 30)}"`);
       
-      // Cria um placeholder para a imagem que serÃ¡ gerada
+      // Cria um placeholder para a imagem que será gerada
       const placeholderId = addImagePlaceholder(prompt);
       
-      // ValidaÃ§Ãµes fortes antes de enviar para a API
+      // Validações fortes antes de enviar para a API
       if (!prompt || !modelId || !dimensions.width || !dimensions.height) {
-        console.error('ParÃ¢metros obrigatÃ³rios ausentes:',
+        console.error('Parâmetros obrigatórios ausentes:',
           !prompt ? 'prompt ' : '',
           !modelId ? 'modelId ' : '',
           !dimensions.width ? 'width ' : '',
           !dimensions.height ? 'height ' : ''
         );
-        updatePlaceholderStatus(placeholderId, 'Erro: ParÃ¢metros obrigatÃ³rios faltando', 'error');
+        updatePlaceholderStatus(placeholderId, 'Erro: Parâmetros obrigatórios faltando', 'error');
         stats.failed++;
         continue;
       }
       
       if (parseInt(numImages) > 4) {
-        console.warn('NÃºmero de imagens limitado a 4. Valor ajustado.');
+        console.warn('Número de imagens limitado a 4. Valor ajustado.');
         numImages = 4;
-        showNotification('MÃ¡ximo de 4 imagens por prompt permitido.', 'warning');
+        showNotification('Máximo de 4 imagens por prompt permitido.', 'warning');
       }
       
       // Define o payload para a API
@@ -1432,48 +1443,48 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
       // Adiciona prompt negativo se estiver preenchido
       const negativePrompt = elements.negativePrompt?.value?.trim();
       if (negativePrompt) {
-        console.log(`ðŸ'¥ Adicionando prompt negativo ao payload: "${negativePrompt}"`);
+        console.log(`ðŸ' Adicionando prompt negativo ao payload: "${negativePrompt}"`);
         payload.negative_prompt = negativePrompt;
         
-        // VerificaÃ§Ã£o dupla para garantir que foi adicionado
+        // Verificação dupla para garantir que foi adicionado
         if (payload.negative_prompt) {
           console.log('âœ… Prompt negativo adicionado com sucesso ao payload');
         } else {
           console.warn('âš ï¸ Falha ao adicionar prompt negativo ao payload');
         }
       } else {
-        console.log('âš ï¸ Nenhum prompt negativo fornecido pelo usuÃ¡rio');
+        console.log('âš ï¸ Nenhum prompt negativo fornecido pelo usuário');
       }
       
-      // Verifica se Flux estÃ¡ ativo e adiciona parÃ¢metros necessÃ¡rios
+      // Verifica se Flux está ativo e adiciona parâmetros necessários
       if (elements.fluxCheckbox && elements.fluxCheckbox.checked) {
-        // Verifica se o modelo Ã© compatÃ­vel com Flux
+        // Verifica se o modelo é compatível com Flux
         const fluxModelIds = [
           'b2614463-296c-462a-9586-aafdb8f00e36', // Flux Dev (Flux Precision)
           '1dd50843-d653-4516-a8e3-f0238ee453ff'  // Flux Schnell (Flux Speed)
         ];
         
         if (!fluxModelIds.includes(modelId)) {
-          updatePlaceholderStatus(placeholderId, 'Erro: Modelo selecionado nÃ£o Ã© compatÃ­vel com Flux', 'error');
-          showNotification('error', 'Modelo selecionado nÃ£o Ã© compatÃ­vel com Flux. Use Flux Dev ou Flux Schnell.');
+          updatePlaceholderStatus(placeholderId, 'Erro: Modelo selecionado não é compatível com Flux', 'error');
+          showNotification('error', 'Modelo selecionado não é compatível com Flux. Use Flux Dev ou Flux Schnell.');
           stats.failed++;
           continue;
         }
         
-        // Configura dimensÃµes recomendadas para Flux
+        // Configura dimensões recomendadas para Flux
         payload.width = 1472;
         payload.height = 832;
         
-        // Adiciona o contraste (obrigatÃ³rio para Flux)
+        // Adiciona o contraste (obrigatório para Flux)
         const validContrasts = [1.0, 1.3, 1.8, 2.5, 3, 3.5, 4, 4.5];
-        let selectedContrast = 3.5; // valor mÃ©dio padrÃ£o
+        let selectedContrast = 3.5; // valor médio padrão
         
         if (elements.fluxContrast && elements.fluxContrast.value) {
           const parsedContrast = parseFloat(elements.fluxContrast.value);
           if (validContrasts.includes(parsedContrast)) {
             selectedContrast = parsedContrast;
           } else {
-            console.warn('Valor de contraste invÃ¡lido para Flux, utilizando 3.5 (MÃ©dio)');
+            console.warn('Valor de contraste inválido para Flux, utilizando 3.5 (Médio)');
           }
         }
         
@@ -1493,27 +1504,27 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
         if (elements.fluxStyle && elements.fluxStyle.value) {
           payload.styleUUID = elements.fluxStyle.value;
         } else {
-          // Define o estilo Dynamic como padrÃ£o
+          // Define o estilo Dynamic como padrão
           payload.styleUUID = '111dc692-d470-4eec-b791-3475abac4c46';
         }
       }
-      // Verifica se Phoenix estÃ¡ ativo e adiciona parÃ¢metros necessÃ¡rios
+      // Verifica se Phoenix está ativo e adiciona parâmetros necessários
       else if (elements.phoenixCheckbox && elements.phoenixCheckbox.checked) {
         // Adiciona o contraste
         if (elements.phoenixContrast && elements.phoenixContrast.value) {
           payload.contrast = parseFloat(elements.phoenixContrast.value);
         } else {
-          payload.contrast = 3.5; // valor mÃ©dio padrÃ£o
+          payload.contrast = 3.5; // valor médio padrão
         }
         
         // Adiciona modo Alchemy (Quality Mode)
         if (elements.phoenixAlchemyCheckbox && elements.phoenixAlchemyCheckbox.checked) {
           payload.alchemy = true;
           
-          // Garantir que o contraste Ã© adequado para Alchemy
+          // Garantir que o contraste é adequado para Alchemy
           if (payload.contrast < 2.5) {
             payload.contrast = 2.5;
-            console.warn('Ajustando contraste para 2.5 (mÃ­nimo para Alchemy)');
+            console.warn('Ajustando contraste para 2.5 (mínimo para Alchemy)');
           }
         }
         

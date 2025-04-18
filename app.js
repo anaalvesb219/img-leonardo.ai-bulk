@@ -208,7 +208,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Configura os event listeners para a chave API
   const saveKeyBtn = document.getElementById('save-key');
   if (saveKeyBtn) {
-    saveKeyBtn.addEventListener('click', handleSaveApiKey);
+    saveKeyBtn.addEventListener('click', handleApiKeyValidation);
+  } else {
+    console.error("Elemento saveKey nÃ£o encontrado!");
   }
   
   const toggleKeyBtn = document.getElementById('toggle-key');
@@ -229,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
     apiKeyInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        handleSaveApiKey();
+        handleApiKeyValidation();
       }
     });
   }
@@ -462,7 +464,9 @@ function initializeApp() {
   
   // Inicializa os event listeners principais
   if (elements.saveKey) {
-    elements.saveKey.addEventListener('click', handleSaveApiKey);
+    elements.saveKey.addEventListener('click', handleApiKeyValidation);
+  } else {
+    console.error("Elemento saveKey nÃ£o encontrado!");
   }
   
   if (elements.generateButton) {
@@ -516,7 +520,7 @@ function setupEventListeners() {
   // Salvar a chave de API
   if (elements.saveKey) {
     console.log("Adicionando event listener ao botÃ£o saveKey");
-    elements.saveKey.addEventListener('click', handleSaveApiKey);
+    elements.saveKey.addEventListener('click', handleApiKeyValidation);
   } else {
     console.error("Elemento saveKey nÃ£o encontrado!");
   }
