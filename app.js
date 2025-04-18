@@ -134,7 +134,7 @@ async function salvarChaveApiNoArquivo(apiKey) {
 }
 
 // FunÃ§Ã£o para lidar com o salvamento e validaÃ§Ã£o da API key
-async function handleKeyValidation() {
+async function handleSaveApiKey() {
   const apiKeyInput = document.getElementById('api-key');
   const apiKey = apiKeyInput.value.trim();
   
@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Configura os event listeners para a chave API
   const saveKeyBtn = document.getElementById('save-key');
   if (saveKeyBtn) {
-    saveKeyBtn.addEventListener('click', handleKeyValidation);
+    saveKeyBtn.addEventListener('click', handleSaveApiKey);
   }
   
   const toggleKeyBtn = document.getElementById('toggle-key');
@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
     apiKeyInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        handleKeyValidation();
+        handleSaveApiKey();
       }
     });
   }
@@ -460,7 +460,7 @@ function initializeApp() {
   
   // Inicializa os event listeners principais
   if (elements.saveKey) {
-    elements.saveKey.addEventListener('click', handleKeyValidation);
+    elements.saveKey.addEventListener('click', handleSaveApiKey);
   }
   
   if (elements.generateButton) {
@@ -514,7 +514,7 @@ function setupEventListeners() {
   // Salvar a chave de API
   if (elements.saveKey) {
     console.log("Adicionando event listener ao botÃ£o saveKey");
-    elements.saveKey.addEventListener('click', handleKeyValidation);
+    elements.saveKey.addEventListener('click', handleSaveApiKey);
   } else {
     console.error("Elemento saveKey nÃ£o encontrado!");
   }
@@ -648,65 +648,53 @@ function toggleApiKeyVisibility() {
 /**
  * Lida com o clique no botÃ£o de validaÃ§Ã£o
  */
-async function handleKeyValidation() {
-  console.log("Validando chave da API...");
-  
-  // Reseta qualquer feedback visual anterior
-  resetApiKeyFeedback();
-  
-  try {
-  // Obter o valor do campo
+async function handleSaveApiKey() {
   const apiKeyInput = document.getElementById('api-key');
-  
-  if (!apiKeyInput) {
-    console.error("Elemento api-key nÃ£o encontrado!");
-    showNotification('Erro ao acessar o campo da chave API', 'error');
-    return;
-  }
-  
   const apiKey = apiKeyInput.value.trim();
   
-  // ValidaÃ§Ã£o bÃ¡sica
   if (!apiKey) {
-    console.error("Chave API vazia!");
-      showNotification('Por favor, aguarde enquanto carregamos a chave do proxy ou insira uma manualmente', 'warning');
-      
-      // Tentar carregar do proxy automaticamente
-      try {
-        await carregarChaveApiDoProxy();
-      } catch (error) {
-        console.error("Erro ao carregar chave do proxy:", error);
-        showApiKeyValidationFeedback(false, 'NÃ£o foi possÃ­vel carregar a chave do proxy');
-      }
+    showApiKeyValidationFeedback(false, 'Por favor, insira uma chave API');
     return;
   }
-
-    // Mostrar notificaÃ§Ã£o de que estÃ¡ tentando validar
-    showNotification('Validando chave API...', 'info');
-    
-    // Aplicar a chave ao objeto leonardoAPI e validar
-    if (window.leonardoAPI) {
-      window.leonardoAPI.apiKey = apiKey;
+  
+  // Exibe feedback de carregamento
+  const saveKeyBtn = document.getElementById('save-key');
+  const originalBtnText = saveKeyBtn.innerHTML;
+  saveKeyBtn.innerHTML = '<span class="spinner small"></span> Validando...';
+  saveKeyBtn.disabled = true;
+  
+  try {
+    // Tenta validar a chave
+    if (window.leonardoAPI && typeof window.leonardoAPI.setApiKey === 'function') {
+      window.leonardoAPI.setApiKey(apiKey);
+      
+      // Realiza uma requisiÃ§Ã£o de teste para validar a chave
       const isValid = await window.leonardoAPI.validateApiKey();
-    
-    if (isValid) {
-        console.log("Chave API validada com sucesso");
-        showApiKeyValidationFeedback(true, "Chave API validada com sucesso");
-        showNotification('Chave API validada com sucesso!', 'success');
+      
+      if (isValid) {
+        // Salva a chave no arquivo .env
+        await salvarChaveApiNoArquivo(apiKey);
+        
+        showApiKeyValidationFeedback(true, 'Chave API vÃ¡lida!');
+        
+        // Dispara evento de validaÃ§Ã£o
+        const event = new CustomEvent('keyValidated', {
+          detail: { key: apiKey, valid: true }
+        });
+        document.dispatchEvent(event);
       } else {
-        console.error("Falha ao validar a chave API");
-        showApiKeyValidationFeedback(false, "Chave API invÃ¡lida. Verifique se estÃ¡ correta.");
-        showNotification('Falha ao validar a chave API. Verifique se estÃ¡ correta.', 'error');
+        showApiKeyValidationFeedback(false, 'Chave API invÃ¡lida. Verifique e tente novamente.');
       }
     } else {
-      console.error("Objeto leonardoAPI nÃ£o disponÃ­vel");
-      showApiKeyValidationFeedback(false, "Falha na inicializaÃ§Ã£o da API");
-      showNotification('Erro ao inicializar a API. Recarregue a pÃ¡gina.', 'error');
+      showApiKeyValidationFeedback(false, 'Erro ao inicializar o gerenciador de API.');
     }
   } catch (error) {
-    console.error("Erro ao validar a chave API:", error);
-    showApiKeyValidationFeedback(false, `Erro: ${error.message}`);
-    showNotification(`Erro ao validar a chave API: ${error.message}`, 'error');
+    console.error('Erro ao validar a chave API:', error);
+    showApiKeyValidationFeedback(false, 'Erro ao validar a chave API. Verifique o console.');
+  } finally {
+    // Restaura o botÃ£o
+    saveKeyBtn.innerHTML = originalBtnText;
+    saveKeyBtn.disabled = false;
   }
 }
 
@@ -1221,13 +1209,13 @@ function updateImagePlaceholderWithError(id, errorMessage) {
 }
 
 /**
- * Adiciona uma imagem Ã  galeria e ao estado da aplicaÃ§Ã£o
+ * Adiciona uma imagem Ã  galeria e ao estado da aplicaÃ§Ã£o
  * @param {object} image - Dados da imagem (url, id)
  * @param {string} prompt - O prompt usado para gerar a imagem
  */
 function addImageToGallery(image, prompt) {
   if (!image || !image.url) {
-    console.error("Tentativa de adicionar imagem sem URL Ã  galeria");
+    console.error("Tentativa de adicionar imagem sem URL Ã  galeria");
     return;
   }
 
@@ -1267,11 +1255,11 @@ function addImageToGallery(image, prompt) {
     window.open(url, '_blank');
   });
   
-  // Adiciona o card Ã  galeria
+  // Adiciona o card Ã  galeria
   if (elements && elements.gallery) {
     elements.gallery.appendChild(imageCard);
   } else {
-    // Tenta adicionar Ã  galeria pelo ID como alternativa
+    // Tenta adicionar Ã  galeria pelo ID como alternativa
     const galleryElement = document.getElementById('image-gallery');
     if (galleryElement) {
       galleryElement.appendChild(imageCard);
@@ -1444,17 +1432,17 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
       // Adiciona prompt negativo se estiver preenchido
       const negativePrompt = elements.negativePrompt?.value?.trim();
       if (negativePrompt) {
-        console.log(`ðŸ’¥ Adicionando prompt negativo ao payload: "${negativePrompt}"`);
+        console.log(`ðŸ'¥ Adicionando prompt negativo ao payload: "${negativePrompt}"`);
         payload.negative_prompt = negativePrompt;
         
         // VerificaÃ§Ã£o dupla para garantir que foi adicionado
         if (payload.negative_prompt) {
           console.log('âœ… Prompt negativo adicionado com sucesso ao payload');
         } else {
-          console.warn('âš ï¸ Falha ao adicionar prompt negativo ao payload');
+          console.warn('âš ï¸ Falha ao adicionar prompt negativo ao payload');
         }
       } else {
-        console.log('âš ï¸ Nenhum prompt negativo fornecido pelo usuÃ¡rio');
+        console.log('âš ï¸ Nenhum prompt negativo fornecido pelo usuÃ¡rio');
       }
       
       // Verifica se Flux estÃ¡ ativo e adiciona parÃ¢metros necessÃ¡rios
@@ -1640,7 +1628,7 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
                 // Pega a primeira imagem da lista
                 const image = generatedImages[0];
                 
-                // Adiciona a imagem Ã  galeria
+                // Adiciona a imagem Ã  galeria
                 addImageToGallery({
                   url: image.url,
                   id: image.id || generationId
