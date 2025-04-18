@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Geração em massa de imagens usando a API do Leonardo AI",
   "main": "api/generate.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
