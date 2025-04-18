@@ -1,0 +1,56 @@
+/* Estilos para o aviso de CORS */
+.cors-warning {
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 8px;
+  margin: 20px auto;
+  max-width: 900px;
+  padding: 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.warning-content {
+  padding: 20px;
+}
+
+.cors-warning h3 {
+  color: #856404;
+  margin-top: 0;
+}
+
+.cors-warning p {
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.cors-warning code {
+  background-color: #f8f9fa;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  color: #d63384;
+}
+
+.cors-warning ol {
+  padding-left: 20px;
+  margin-bottom: 20px;
+}
+
+.cors-warning li {
+  margin-bottom: 10px;
+}
+
+.cors-warning a {
+  color: #0366d6;
+  text-decoration: none;
+}
+
+.cors-warning a:hover {
+  text-decoration: underline;
+}
+
+#close-warning {
+  margin-top: 10px;
+  background-color: #f8f9fa;
+  color: #495057;
+} 
