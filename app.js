@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Configura os event listeners para a chave API
   const saveKeyBtn = document.getElementById('save-key');
   if (saveKeyBtn) {
-    saveKeyBtn.addEventListener('click', handleApiKeyValidation);
+    saveKeyBtn.addEventListener('click', handleSaveApiKey);
   } else {
     console.error("Elemento saveKey nÃ£o encontrado!");
   }
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
     apiKeyInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        handleApiKeyValidation();
+        handleSaveApiKey();
       }
     });
   }
@@ -464,7 +464,7 @@ function initializeApp() {
   
   // Inicializa os event listeners principais
   if (elements.saveKey) {
-    elements.saveKey.addEventListener('click', handleApiKeyValidation);
+    elements.saveKey.addEventListener('click', handleSaveApiKey);
   } else {
     console.error("Elemento saveKey nÃ£o encontrado!");
   }
@@ -520,7 +520,7 @@ function setupEventListeners() {
   // Salvar a chave de API
   if (elements.saveKey) {
     console.log("Adicionando event listener ao botÃ£o saveKey");
-    elements.saveKey.addEventListener('click', handleApiKeyValidation);
+    elements.saveKey.addEventListener('click', handleSaveApiKey);
   } else {
     console.error("Elemento saveKey nÃ£o encontrado!");
   }
@@ -624,7 +624,7 @@ function setupEventListeners() {
 
   // Evento para validar a API Key
   elements.validateApiKey.addEventListener('click', () => {
-    handleApiKeyValidation();
+    handleSaveApiKey();
   });
 }
 
@@ -632,34 +632,24 @@ function setupEventListeners() {
  * Alterna a visibilidade da chave de API
  */
 function toggleApiKeyVisibility() {
-  console.log("Alternando visibilidade da chave API");
+  const apiKeyInput = document.getElementById('api-key');
+  const toggleKeyBtn = document.getElementById('toggle-key');
   
-  if (!elements.apiKey) {
-    console.error("Elemento apiKey nÃ£o encontrado");
-    return;
-  }
+  if (!apiKeyInput || !toggleKeyBtn) return;
   
-  const toggleButton = document.getElementById('toggle-key');
-  if (!toggleButton) {
-    console.error("BotÃ£o toggle nÃ£o encontrado");
-    return;
-  }
+  const type = apiKeyInput.type === 'password' ? 'text' : 'password';
+  apiKeyInput.type = type;
   
-  if (elements.apiKey.type === 'password') {
-    elements.apiKey.type = 'text';
-    toggleButton.innerHTML = '<i class="fas fa-eye-slash"></i>';
-    toggleButton.title = 'Esconder Chave';
-  } else {
-    elements.apiKey.type = 'password';
-    toggleButton.innerHTML = '<i class="fas fa-eye"></i>';
-    toggleButton.title = 'Mostrar Chave';
+  const icon = toggleKeyBtn.querySelector('i');
+  if (icon) {
+    icon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
   }
 }
 
 /**
  * Lida com o clique no botão de validação
  */
-async function handleApiKeyValidation() {
+async function handleSaveApiKey() {
   const apiKeyInput = document.getElementById('api-key');
   const apiKey = apiKeyInput.value.trim();
   
@@ -679,22 +669,22 @@ async function handleApiKeyValidation() {
     if (window.leonardoAPI && typeof window.leonardoAPI.setApiKey === 'function') {
       window.leonardoAPI.setApiKey(apiKey);
       
-      // Realiza uma requisição de teste para validar a chave
+      // Realiza uma requisiÃ§Ã£o de teste para validar a chave
       const isValid = await window.leonardoAPI.validateApiKey();
       
       if (isValid) {
         // Salva a chave no arquivo .env
         await salvarChaveApiNoArquivo(apiKey);
         
-        showApiKeyValidationFeedback(true, 'Chave API válida!');
+        showApiKeyValidationFeedback(true, 'Chave API vÃ¡lida!');
         
-        // Dispara evento de validação
+        // Dispara evento de validaÃ§Ã£o
         const event = new CustomEvent('keyValidated', {
           detail: { key: apiKey, valid: true }
         });
         document.dispatchEvent(event);
       } else {
-        showApiKeyValidationFeedback(false, 'Chave API inválida. Verifique e tente novamente.');
+        showApiKeyValidationFeedback(false, 'Chave API invÃ¡lida. Verifique e tente novamente.');
       }
     } else {
       showApiKeyValidationFeedback(false, 'Erro ao inicializar o gerenciador de API.');
@@ -703,7 +693,7 @@ async function handleApiKeyValidation() {
     console.error('Erro ao validar a chave API:', error);
     showApiKeyValidationFeedback(false, 'Erro ao validar a chave API. Verifique o console.');
   } finally {
-    // Restaura o botão
+    // Restaura o botÃ£o
     saveKeyBtn.innerHTML = originalBtnText;
     saveKeyBtn.disabled = false;
   }
