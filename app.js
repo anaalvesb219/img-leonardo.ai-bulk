@@ -317,51 +317,22 @@ function checkAndInitialize() {
  * Inicializa a aplicação
  */
 async function init() {
-  console.log("Inicializando aplicação...");
-
-  // Verifica se o objeto leonardoAPI está disponível
-  if (typeof window.leonardoAPI === 'undefined' || !window.leonardoAPI) {
-    console.error("Objeto leonardoAPI não encontrado!");
-    showNotification('Erro ao inicializar a API. Recarregue a página.', 'error');
-    
-    // Última tentativa de criar uma instância manualmente
-    try {
-      console.log("Tentando criar instância de LeonardoAPI manualmente...");
-      window.leonardoAPI = new LeonardoAPI();
-      console.log("Instância de LeonardoAPI criada com sucesso como fallback:", window.leonardoAPI);
-    } catch (error) {
-      console.error("Erro fatal ao criar instância de LeonardoAPI:", error);
-      alert("Erro crítico ao inicializar a aplicação. Por favor, recarregue a página.");
-      return; // Interrompe a execução da função
-    }
-  } else {
-    console.log("LeonardoAPI já está disponível:", window.leonardoAPI);
-  }
-
-  // Tenta carregar a chave da API automaticamente do proxy novamente (caso o DOMContentLoaded tenha falhado)
   try {
-    await carregarChaveApiDoProxy();
+    // Carrega a chave da API
+    await apiKeyManager.initialize();
+    
+    // Inicializa a aplicação
+    initializeApp();
+    
+    // Carrega as preferências de visualização da galeria
+    loadGalleryViewPreferences();
+    
+    // Carrega os modelos disponíveis
+    await loadModels();
+    
   } catch (error) {
-    console.warn("Falha ao carregar chave da API durante inicialização:", error);
-  }
-
-  // Tenta validar a conexão com o proxy automaticamente na inicialização
-  try {
-    console.log('Verificando conexão com o proxy automaticamente...');
-    
-    // Verifica se a API está funcionando
-    const isValid = await window.leonardoAPI.validateApiKey();
-      
-      if (isValid) {
-      console.log('API validada com sucesso!');
-        // loadModels será chamado pelo evento keyValidated
-      } else {
-      console.error('Não foi possível validar a API');
-      showNotification('Falha ao verificar a API. Tente validar manualmente.', 'warning');
-      }
-    } catch (error) {
-    console.error('Erro ao verificar a API:', error);
-    showNotification('Erro ao verificar a API. Tente validar manualmente.', 'warning');
+    console.error("Erro durante a inicialização:", error);
+    showNotification(`Erro ao inicializar: ${error.message}`, 'error');
   }
 }
 
@@ -435,7 +406,17 @@ function initializeApp() {
     gallery: document.querySelector('.gallery'),
     generatedImagesCount: document.getElementById('generated-images-count'),
     clearGalleryButton: document.getElementById('clear-gallery'),
-    downloadAllButton: document.getElementById('download-all')
+    downloadAllButton: document.getElementById('download-all'),
+    
+    // Controles de visualização da galeria
+    gridViewButton: document.getElementById('grid-view'),
+    listViewButton: document.getElementById('list-view'),
+    
+    // Modal de imagem
+    imageModal: document.getElementById('image-modal'),
+    modalImage: document.getElementById('modal-image'),
+    modalCaption: document.getElementById('modal-caption'),
+    closeModal: document.querySelector('.close-modal')
   };
   
   // Inicializa o estado da aplicação
@@ -464,42 +445,8 @@ function initializeApp() {
   setupPhoenixToggle();
   setupFluxToggle();
   
-  // Inicializa os event listeners principais
-  if (elements.saveKey) {
-    elements.saveKey.addEventListener('click', handleSaveApiKey);
-  }
-  
-  if (elements.generateButton) {
-    elements.generateButton.addEventListener('click', startImageGeneration);
-  }
-  
-  if (elements.cancelButton) {
-    elements.cancelButton.addEventListener('click', cancelGeneration);
-  }
-  
-  if (elements.clearGalleryButton) {
-    elements.clearGalleryButton.addEventListener('click', clearGeneratedImages);
-  }
-  
-  if (elements.downloadAllButton) {
-    elements.downloadAllButton.addEventListener('click', downloadAllImages);
-  }
-  
-  // Define a visualização inicial correta para componentes opcionais
-  const hasPhotoReal = !!elements.photoRealCheckbox;
-  const hasPhoenix = !!elements.phoenixCheckbox;
-  const hasFlux = !!elements.fluxCheckbox;
-  
-  if (hasPhotoReal && elements.photoRealOptions) {
-    elements.photoRealOptions.style.display = 'none';
-  }
-  
-  if (hasPhoenix && elements.phoenixOptions) {
-    elements.phoenixOptions.style.display = 'none';
-  }
-  
-  // Inicializa a aplicação
-  init();
+  // Configura todos os event listeners
+  setupEventListeners();
   
   console.log("Aplicação inicializada com sucesso!");
 }
@@ -552,81 +499,42 @@ function setupEventListeners() {
   }
   
   // Botão para cancelar a geração
-  const cancelButton = document.getElementById('cancel-button');
-  if (cancelButton) {
-    cancelButton.addEventListener('click', cancelGeneration);
+  if (elements.cancelButton) {
+    elements.cancelButton.addEventListener('click', cancelGeneration);
+  }
+  
+  // Botão para limpar a galeria
+  if (elements.clearGalleryButton) {
+    elements.clearGalleryButton.addEventListener('click', clearGeneratedImages);
   }
 
-  // Configura o event listener para o checkbox PhotoReal
-  if (elements.photoRealCheckbox) {
-    elements.photoRealCheckbox.addEventListener('change', function() {
-      if (elements.photoRealOptions) {
-        elements.photoRealOptions.classList.toggle('active', this.checked);
-      }
-      
-      // Atualiza o exemplo de payload quando o checkbox for alterado
-      if (elements.modelSelect && elements.modelSelect.value) {
-        updateSampleRequest(elements.modelSelect.value);
-      }
+  // Configura a alternância de visualização da galeria
+  if (elements.gridViewButton && elements.listViewButton) {
+    elements.gridViewButton.addEventListener('click', () => {
+      setGalleryView('grid');
+    });
+    
+    elements.listViewButton.addEventListener('click', () => {
+      setGalleryView('list');
     });
   }
   
-  // Configura o event listener para o checkbox Phoenix
-  if (elements.phoenixCheckbox) {
-    elements.phoenixCheckbox.addEventListener('change', function() {
-      if (elements.phoenixOptions) {
-        elements.phoenixOptions.classList.toggle('active', this.checked);
-      }
-      
-      // Quando Phoenix é marcado, desmarca o PhotoReal para evitar conflitos
-      if (this.checked && elements.photoRealCheckbox) {
-        elements.photoRealCheckbox.checked = false;
-        if (elements.photoRealOptions) {
-          elements.photoRealOptions.classList.remove('active');
-        }
-      }
-      
-      // Atualiza o exemplo de payload quando o checkbox for alterado
-      if (elements.modelSelect && elements.modelSelect.value) {
-        updateSampleRequest(elements.modelSelect.value);
+  // Configura o fechamento do modal de imagem
+  if (elements.imageModal && elements.closeModal) {
+    elements.closeModal.addEventListener('click', () => {
+      closeImageModal();
+    });
+    
+    elements.imageModal.addEventListener('click', (e) => {
+      if (e.target === elements.imageModal || e.target === elements.modalImage) {
+        closeImageModal();
       }
     });
-  }
-  
-  // Configura o event listener para o checkbox de Alchemy do Phoenix
-  if (elements.phoenixAlchemyCheckbox) {
-    elements.phoenixAlchemyCheckbox.addEventListener('change', function() {
-      // Se alchemy está marcado, verifica se o contraste é adequado
-      if (this.checked) {
-        const contrast = parseFloat(elements.phoenixContrast.value);
-        if (contrast < 2.5) {
-          showNotification('warning', 'O modo Alchemy requer contraste de 2.5 ou maior. Ajustando automaticamente.');
-          elements.phoenixContrast.value = '2.5';
-        }
-      }
-      
-      // Atualiza o exemplo de payload
-      if (elements.modelSelect && elements.modelSelect.value) {
-        updateSampleRequest(elements.modelSelect.value);
-      }
-    });
-  }
-  
-  // Configura o event listener para o contraste do Phoenix
-  if (elements.phoenixContrast) {
-    elements.phoenixContrast.addEventListener('change', function() {
-      // Verifica se alchemy está marcado e ajusta o contraste se necessário
-      if (elements.phoenixAlchemyCheckbox && elements.phoenixAlchemyCheckbox.checked) {
-        const contrast = parseFloat(this.value);
-        if (contrast < 2.5) {
-          showNotification('warning', 'O modo Alchemy requer contraste de 2.5 ou maior. Ajustando automaticamente.');
-          this.value = '2.5';
-        }
-      }
-      
-      // Atualiza o exemplo de payload
-      if (elements.modelSelect && elements.modelSelect.value) {
-        updateSampleRequest(elements.modelSelect.value);
+    
+    // Fechar modal com tecla Esc
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && elements.imageModal.classList.contains('show')) {
+        closeImageModal();
       }
     });
   }
@@ -1265,44 +1173,74 @@ function addImageToGallery(image, prompt) {
   const imageCard = document.createElement('div');
   imageCard.className = 'image-card';
   
+  // Estrutura HTML para o card de imagem compatível com visualização em grade e lista
   imageCard.innerHTML = `
-    <img src="${image.url}" alt="Imagem gerada" loading="lazy">
-    <div class="image-overlay">
+    <div class="image-container">
+      <img src="${image.url}" alt="Imagem gerada" class="generated-image" loading="lazy"
+           data-prompt="${truncateText(prompt, 200)}" data-id="${image.id}">
+    </div>
+    <div class="image-info">
       <div class="prompt-text">${truncateText(prompt, 50)}</div>
+      <div class="image-details">
+        <span><i class="fas fa-id-card"></i> ${image.id.substring(0, 8)}...</span>
+      </div>
       <div class="image-actions">
-        <button class="download-image" data-url="${image.url}" data-id="${image.id}">
-          <i class="fas fa-download"></i>
+        <button class="download-btn" data-url="${image.url}" data-id="${image.id}">
+          <i class="fas fa-download"></i> Baixar
         </button>
-        <button class="open-image" data-url="${image.url}">
-          <i class="fas fa-external-link-alt"></i>
+        <button class="open-btn" data-url="${image.url}">
+          <i class="fas fa-external-link-alt"></i> Abrir
+        </button>
+        <button class="delete-btn" data-id="${image.id}">
+          <i class="fas fa-trash"></i> Excluir
         </button>
       </div>
     </div>
   `;
   
-  // Adiciona event listeners para os botões
-  imageCard.querySelector('.download-image').addEventListener('click', (e) => {
-    const url = e.currentTarget.getAttribute('data-url');
-    const id = e.currentTarget.getAttribute('data-id');
-    downloadSingleImage(url, id);
-  });
+  // Adiciona event listener para o zoom (ao clicar na imagem)
+  const imageElement = imageCard.querySelector('.generated-image');
+  if (imageElement) {
+    imageElement.addEventListener('click', () => {
+      openImageModal(image.url, prompt);
+    });
+  }
   
-  imageCard.querySelector('.open-image').addEventListener('click', (e) => {
-    const url = e.currentTarget.getAttribute('data-url');
-    window.open(url, '_blank');
-  });
+  // Adiciona event listeners para os botões
+  const downloadBtn = imageCard.querySelector('.download-btn');
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const url = e.currentTarget.getAttribute('data-url');
+      const id = e.currentTarget.getAttribute('data-id');
+      downloadSingleImage(url, id);
+    });
+  }
+  
+  const openBtn = imageCard.querySelector('.open-btn');
+  if (openBtn) {
+    openBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const url = e.currentTarget.getAttribute('data-url');
+      window.open(url, '_blank');
+    });
+  }
+  
+  const deleteBtn = imageCard.querySelector('.delete-btn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = e.currentTarget.getAttribute('data-id');
+      removeImageFromGallery(id);
+    });
+  }
   
   // Adiciona o card à galeria
-  if (elements && elements.gallery) {
-    elements.gallery.appendChild(imageCard);
+  const galleryElement = document.getElementById('image-gallery') || elements.gallery;
+  if (galleryElement) {
+    galleryElement.appendChild(imageCard);
   } else {
-    // Tenta adicionar à galeria pelo ID como alternativa
-    const galleryElement = document.getElementById('image-gallery');
-    if (galleryElement) {
-      galleryElement.appendChild(imageCard);
-    } else {
-      console.error("Elemento gallery não encontrado para adicionar imagem");
-    }
+    console.error("Elemento gallery não encontrado para adicionar imagem");
   }
   
   // Mostra o botão de download se houver pelo menos uma imagem
@@ -2093,15 +2031,8 @@ async function enviarModelosParaProxy() {
     { id: '1e60896f-3c26-4296-8ecc-53e2afecc132', name: 'Leonardo Diffusion XL', modelType: 'PhotoReal' },
     { id: '2067ae52-33fd-4a82-bb92-c2c55e7d2786', name: 'AlbedoBase XL', modelType: 'Texto para Imagem' },
     { id: 'f1929ea3-b169-4c18-a16c-5d58b4292c69', name: 'RPG v5', modelType: 'RPG' },
-    { id: '16e7060a-803e-4df3-97ee-edcfa5dc9cc8', name: 'SDXL 1.0', modelType: 'Texto para Imagem' },
-    { id: 'b63f7119-31dc-4540-969b-2a9df997e173', name: 'SDXL 0.9', modelType: 'Texto para Imagem' },
-    { id: 'ac614f96-1082-45bf-be9d-757f2d31c174', name: 'DreamShaper v7', modelType: 'Texto para Imagem' },
     { id: 'b2614463-296c-462a-9586-aafdb8f00e36', name: 'Flux Dev', modelType: 'Flux' },
-    { id: '1dd50843-d653-4516-a8e3-f0238ee453ff', name: 'Flux Schnell', modelType: 'Flux' },
-    { id: 'd69c8273-6b17-4a30-a13e-d6637ae1c644', name: '3D Animation Style', modelType: 'Estilizado' },
-    { id: '6bef9f1b-29cb-40c7-b9df-32b51c1f67d3', name: 'Leonardo Creative', modelType: 'Texto para Imagem' },
-    { id: 'cd2b2a15-9760-4174-a5ff-4d2925057376', name: 'Leonardo Select', modelType: 'Texto para Imagem' },
-    { id: '291be633-cb24-434f-898f-e662799936ad', name: 'Leonardo Signature', modelType: 'Texto para Imagem' }
+    { id: '1dd50843-d653-4516-a8e3-f0238ee453ff', name: 'Flux Schnell', modelType: 'Flux' }
   ];
 
   try {
@@ -2541,5 +2472,180 @@ function setupRangeSliders() {
   console.log("Sliders de intervalo configurados com sucesso");
 }
 
-// Fim do arquivo 
-// Fim do arquivo 
+/**
+ * Remove uma imagem da galeria e do estado da aplicação
+ * @param {string} id - ID da imagem a ser removida
+ */
+function removeImageFromGallery(id) {
+  if (!id) return;
+  
+  // Remove do estado
+  if (state && state.generatedImages) {
+    state.generatedImages = state.generatedImages.filter(img => img.id !== id);
+  }
+  
+  // Remove do DOM
+  const gallery = document.getElementById('image-gallery') || elements.gallery;
+  if (gallery) {
+    const cards = gallery.querySelectorAll('.image-card');
+    cards.forEach(card => {
+      const cardId = card.querySelector('[data-id]')?.getAttribute('data-id');
+      if (cardId === id) {
+        card.remove();
+      }
+    });
+  }
+  
+  // Esconde o botão de download se não houver mais imagens
+  if (state && state.generatedImages.length === 0) {
+    const downloadAllButton = document.getElementById('download-all');
+    if (downloadAllButton) {
+      downloadAllButton.classList.add('hidden');
+    }
+  }
+  
+  showNotification('Imagem removida com sucesso', 'success');
+}
+
+/**
+ * Define o modo de visualização da galeria (grade ou lista)
+ * @param {string} viewMode - Modo de visualização ('grid' ou 'list')
+ */
+function setGalleryView(viewMode) {
+  console.log(`Alterando modo de visualização para: ${viewMode}`);
+  
+  // Atualiza os botões
+  if (elements.gridViewButton && elements.listViewButton) {
+    elements.gridViewButton.classList.remove('active');
+    elements.listViewButton.classList.remove('active');
+    
+    if (viewMode === 'grid') {
+      elements.gridViewButton.classList.add('active');
+    } else {
+      elements.listViewButton.classList.add('active');
+    }
+  }
+  
+  // Atualiza as classes das galerias
+  const galleries = document.querySelectorAll('.gallery');
+  galleries.forEach(gallery => {
+    if (viewMode === 'grid') {
+      gallery.classList.remove('gallery-list');
+      gallery.classList.add('gallery-grid');
+    } else {
+      gallery.classList.remove('gallery-grid');
+      gallery.classList.add('gallery-list');
+    }
+  });
+  
+  // Salva a preferência no localStorage
+  localStorage.setItem('galleryViewMode', viewMode);
+  
+  console.log(`Modo de visualização alterado para: ${viewMode}`);
+}
+
+/**
+ * Abre o modal com a imagem ampliada
+ * @param {string} imageUrl - URL da imagem
+ * @param {string} prompt - Prompt usado para gerar a imagem
+ */
+function openImageModal(imageUrl, prompt) {
+  if (!elements.imageModal || !elements.modalImage) {
+    console.error("Elementos do modal não encontrados");
+    return;
+  }
+  
+  // Define a imagem no modal
+  elements.modalImage.src = imageUrl;
+  
+  // Define a legenda (prompt) no modal
+  if (elements.modalCaption) {
+    elements.modalCaption.textContent = prompt;
+  }
+  
+  // Mostra o modal
+  elements.imageModal.style.display = 'flex';
+  setTimeout(() => {
+    elements.imageModal.classList.add('show');
+  }, 10);
+  
+  // Previne o scroll na página quando o modal está aberto
+  document.body.style.overflow = 'hidden';
+}
+
+/**
+ * Fecha o modal de imagem
+ */
+function closeImageModal() {
+  if (!elements.imageModal) return;
+  
+  // Remove a classe show e configura o display para none após a animação
+  elements.imageModal.classList.remove('show');
+  
+  setTimeout(() => {
+    elements.imageModal.style.display = 'none';
+    
+    // Restaura o scroll na página
+    document.body.style.overflow = '';
+    
+    // Limpa a imagem do modal após o fechamento para liberar memória
+    if (elements.modalImage) {
+      elements.modalImage.src = '';
+    }
+  }, 300);
+}
+
+/**
+ * Carrega as preferências de visualização da galeria salvas
+ */
+function loadGalleryViewPreferences() {
+  const savedViewMode = localStorage.getItem('galleryViewMode');
+  if (savedViewMode) {
+    setGalleryView(savedViewMode);
+  } else {
+    // Modo padrão: grade
+    setGalleryView('grid');
+  }
+}
+
+// Inicialização da aplicação
+async function init() {
+  try {
+    // Carrega a chave da API
+    await apiKeyManager.initialize();
+    
+    // Inicializa a aplicação
+    initializeApp();
+    
+    // Carrega as preferências de visualização da galeria
+    loadGalleryViewPreferences();
+    
+    // Carrega os modelos disponíveis
+    await loadModels();
+    
+  } catch (error) {
+    console.error("Erro durante a inicialização:", error);
+    showNotification(`Erro ao inicializar: ${error.message}`, 'error');
+  }
+}
+
+// Inicializa a aplicação após o carregamento do DOM
+document.addEventListener('DOMContentLoaded', async function() {
+  console.log("DOM carregado, iniciando aplicação...");
+  
+  // Inicializa o gerenciador de chave API
+  apiKeyManager.onKeyValidated = async function() {
+    console.log("Chave API validada, carregando modelos...");
+    loadModels();
+  };
+  
+  // Carrega a chave API do arquivo .env se disponível
+  try {
+    await carregarChaveApiDoArquivo();
+  } catch (error) {
+    console.warn("Não foi possível carregar a chave API do arquivo:", error);
+  }
+  
+  // Inicializa a aplicação
+  init();
+});
