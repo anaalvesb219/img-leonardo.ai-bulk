@@ -407,8 +407,14 @@ function initializeApp() {
     fluxOptions: document.getElementById('flux-options'),
     fluxContrast: document.getElementById('flux-contrast'),
     fluxStyle: document.getElementById('flux-style'),
-    fluxEnhancePromptCheckbox: document.getElementById('flux-enhance-prompt-checkbox'),
     fluxUltraCheckbox: document.getElementById('flux-ultra-checkbox'),
+    fluxEnhancePromptCheckbox: document.getElementById('flux-enhance-prompt-checkbox'),
+    
+    // Configurações de processamento em lote
+    batchDelay: document.getElementById('batch-delay'),
+    autoDownload: document.getElementById('auto-download'),
+    folderName: document.getElementById('folder-name'),
+    retryCount: document.getElementById('retry-count'),
     
     // Exemplo de requisição - Verificar se o elemento existe antes de tentar acessar
     sampleRequest: document.getElementById('sample-request') ? 
@@ -524,6 +530,15 @@ function setupEventListeners() {
     elements.guidanceScale.addEventListener('input', () => {
       elements.guidanceValue.textContent = elements.guidanceScale.value;
     });
+  }
+  
+  // Configura valor padrão para a pasta de download se estiver vazio
+  if (elements.folderName) {
+    if (!elements.folderName.value) {
+      const defaultFolder = "Leonardo-Images";
+      elements.folderName.value = defaultFolder;
+      console.log(`Configurado valor padrão da pasta para: ${defaultFolder}`);
+    }
   }
 
   // Botão para gerar imagens
@@ -859,11 +874,11 @@ async function loadModels() {
       modelsByCategory[category]
         .sort((a, b) => a.name.localeCompare(b.name))
         .forEach(model => {
-          const option = document.createElement('option');
-          option.value = model.id;
-          option.textContent = model.name;
-          optgroup.appendChild(option);
-        });
+        const option = document.createElement('option');
+        option.value = model.id;
+        option.textContent = model.name;
+        optgroup.appendChild(option);
+      });
       
       elements.modelSelect.appendChild(optgroup);
     });
@@ -1101,7 +1116,7 @@ async function startImageGeneration() {
  * Baixa todas as imagens geradas como um arquivo ZIP
  */
 async function downloadAllImages() {
-  if (state.generatedImages.length === 0) {
+  if (!state || state.generatedImages.length === 0) {
     showNotification('Não há imagens para baixar', 'warning');
     return;
   }
@@ -1117,24 +1132,30 @@ async function downloadAllImages() {
     const zip = new JSZip();
     const downloadPromises = [];
     
+    // Obtém o nome da pasta personalizado ou usa o padrão
+    const folderName = elements.folderName && elements.folderName.value 
+      ? elements.folderName.value.trim() 
+      : "Leonardo-Images";
+    
+    console.log(`Preparando download em lote para pasta: ${folderName}`);
+    
     // Adiciona cada imagem ao ZIP
     for (let i = 0; i < state.generatedImages.length; i++) {
       const image = state.generatedImages[i];
       showNotification(`Preparando imagem ${i + 1}/${state.generatedImages.length}...`, 'info');
       
-      // Faz o download da imagem como blob
-      const promise = window.leonardoAPI.downloadImage(image.url)
-        .then(blob => {
-          // Cria um nome de arquivo com base no ID da imagem
-          const filename = `leonardo_${image.id}.png`;
-          zip.file(filename, blob);
-        });
-      
-      downloadPromises.push(promise);
+      try {
+        // Faz o download da imagem como blob
+        const blob = await window.leonardoAPI.downloadImage(image.url);
+        
+        // Cria um nome de arquivo com base no ID da imagem
+        const filename = `${folderName}/leonardo_${image.id}.png`;
+        zip.file(filename, blob);
+      } catch (error) {
+        console.error(`Erro ao baixar imagem ${i+1}:`, error);
+        showNotification(`Erro ao baixar imagem ${i+1}. Continuando com as demais...`, 'warning');
+      }
     }
-    
-    // Espera todos os downloads completarem
-    await Promise.all(downloadPromises);
     
     // Gera o arquivo ZIP
     showNotification('Gerando arquivo ZIP...', 'info');
@@ -1144,13 +1165,17 @@ async function downloadAllImages() {
     const downloadUrl = URL.createObjectURL(zipBlob);
     const downloadLink = document.createElement('a');
     downloadLink.href = downloadUrl;
-    downloadLink.download = `leonardo_images_${new Date().toISOString().split('T')[0]}.zip`;
+    downloadLink.download = `${folderName}.zip`;
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
     
+    // Limpa o objeto URL para evitar vazamento de memória
+    URL.revokeObjectURL(downloadUrl);
+    
     showNotification('Download iniciado!', 'success');
   } catch (error) {
+    console.error('Erro ao baixar imagens:', error);
     showNotification(`Erro ao baixar imagens: ${error.message}`, 'error');
   }
 }
@@ -1281,8 +1306,9 @@ function addImageToGallery(image, prompt) {
   }
   
   // Mostra o botão de download se houver pelo menos uma imagem
-  if (elements && elements.downloadAllButton && state && state.generatedImages.length > 0) {
-    elements.downloadAllButton.classList.remove('hidden');
+  const downloadAllButton = document.getElementById('download-all');
+  if (downloadAllButton) {
+    downloadAllButton.classList.remove('hidden');
   }
 }
 
@@ -1295,12 +1321,17 @@ async function downloadSingleImage(url, id) {
   try {
     showNotification('Baixando imagem...', 'info');
     
+    // Obtém o nome da pasta personalizado ou usa o padrão
+    const folderName = elements.folderName && elements.folderName.value 
+      ? elements.folderName.value.trim() 
+      : "Leonardo-Images";
+    
     const blob = await window.leonardoAPI.downloadImage(url);
     const downloadUrl = URL.createObjectURL(blob);
     
     const downloadLink = document.createElement('a');
     downloadLink.href = downloadUrl;
-    downloadLink.download = `leonardo_${id}.png`;
+    downloadLink.download = `${folderName}_leonardo_${id}.png`;
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
@@ -1310,6 +1341,7 @@ async function downloadSingleImage(url, id) {
     
     showNotification('Download concluído!', 'success');
   } catch (error) {
+    console.error("Erro ao baixar imagem:", error);
     showNotification(`Erro ao baixar: ${error.message}`, 'error');
   }
 }
@@ -1394,6 +1426,19 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
   // Configura a chave da API
   window.leonardoAPI.apiKey = apiKeyManager.getApiKey();
   
+  // Obtém as configurações de processamento em lote
+  const batchDelay = elements.batchDelay && !isNaN(elements.batchDelay.value) 
+    ? parseInt(elements.batchDelay.value) * 1000 // Converte segundos para milissegundos
+    : 2000; // Valor padrão (2 segundos)
+    
+  const autoDownload = elements.autoDownload ? elements.autoDownload.checked : true;
+  
+  const maxRetries = elements.retryCount && !isNaN(elements.retryCount.value)
+    ? parseInt(elements.retryCount.value)
+    : 3; // Valor padrão (3 tentativas)
+  
+  console.log(`Configurações de lote: Intervalo=${batchDelay/1000}s, Auto-download=${autoDownload}, Máx. Tentativas=${maxRetries}`);
+  
   // Processa cada prompt sequencialmente
   for (let i = 0; i < prompts.length; i++) {
     if (window.cancelGeneration) {
@@ -1403,6 +1448,12 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
     
     const prompt = prompts[i].trim();
     if (!prompt) continue;
+    
+    // Se não for o primeiro prompt, aguarda o intervalo configurado
+    if (i > 0) {
+      console.log(`Aguardando ${batchDelay/1000} segundos antes do próximo prompt...`);
+      await new Promise(resolve => setTimeout(resolve, batchDelay));
+    }
     
     try {
       // Atualiza o progresso
@@ -1559,128 +1610,157 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
 
       console.log("Enviando payload para a API:", JSON.stringify(payload, null, 2));
       
-      try {
-        // Inicia a geração e obtém o ID da geração
-        const generation = await window.leonardoAPI.generateImage(payload);
+      // Implementação de sistema de retentativas
+      let success = false;
+      let attemptCount = 0;
+      
+      while (!success && attemptCount < maxRetries && !window.cancelGeneration) {
+        attemptCount++;
         
-        // Extrai o ID da geração com verificação de diferentes formatos de resposta
-        let generationId;
-        if (generation && generation.sdGenerationJob && generation.sdGenerationJob.generationId) {
-          generationId = generation.sdGenerationJob.generationId;
-        } else if (generation && generation.id) {
-          generationId = generation.id;
-        } else if (generation && generation.data && generation.data.id) {
-          generationId = generation.data.id;
-        } else {
-          throw new Error('Formato de resposta desconhecido da API de geração');
+        if (attemptCount > 1) {
+          console.log(`Tentativa ${attemptCount}/${maxRetries} para prompt: "${truncateText(prompt, 30)}"`);
+          updatePlaceholderStatus(placeholderId, `Tentativa ${attemptCount}/${maxRetries}...`, 'warning');
+          // Espera um pouco antes de tentar novamente
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
         
-        console.log(`Geração iniciada com ID: ${generationId}`);
-        
-        // Verifica o status até que seja concluído
-        let isComplete = false;
-        let statusCheckCount = 0;
-        const maxStatusChecks = 30;  // Máximo de verificações (60 segundos em total com espera de 2s)
-        
-        while (!isComplete && !window.cancelGeneration && statusCheckCount < maxStatusChecks) {
-          await new Promise(resolve => setTimeout(resolve, 2000)); // Espera 2 segundos
-          statusCheckCount++;
+        try {
+          // Inicia a geração e obtém o ID da geração
+          const generation = await window.leonardoAPI.generateImage(payload);
           
-          try {
-            const statusResult = await window.leonardoAPI.checkGenerationStatus(generationId);
+          // Extrai o ID da geração com verificação de diferentes formatos de resposta
+          let generationId;
+          if (generation && generation.sdGenerationJob && generation.sdGenerationJob.generationId) {
+            generationId = generation.sdGenerationJob.generationId;
+          } else if (generation && generation.id) {
+            generationId = generation.id;
+          } else if (generation && generation.data && generation.data.id) {
+            generationId = generation.data.id;
+          } else {
+            throw new Error('Formato de resposta desconhecido da API de geração');
+          }
+          
+          console.log(`Geração iniciada com ID: ${generationId}`);
+          
+          // Verifica o status até que seja concluído
+          let isComplete = false;
+          let statusCheckCount = 0;
+          const maxStatusChecks = 30;  // Máximo de verificações (60 segundos em total com espera de 2s)
+          
+          while (!isComplete && !window.cancelGeneration && statusCheckCount < maxStatusChecks) {
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Espera 2 segundos
+            statusCheckCount++;
             
-            // Verifica diferentes formatos de resposta para o status
-            let status = null;
-            let generatedImages = [];
-            
-            // Formato da documentação oficial (nova versão): campos status e generated_images no nível raiz
-            if (statusResult.status) {
-              status = statusResult.status;
+            try {
+              const statusResult = await window.leonardoAPI.checkGenerationStatus(generationId);
               
-              if (status === "COMPLETE" && statusResult.generated_images) {
-                generatedImages = statusResult.generated_images;
-              }
-            } 
-            // Formato legado 1: generations_by_pk
-            else if (statusResult.generations_by_pk) {
-              status = statusResult.generations_by_pk.status;
+              // Verifica diferentes formatos de resposta para o status
+              let status = null;
+              let generatedImages = [];
               
-              if (status === "COMPLETE" && statusResult.generations_by_pk.generated_images) {
-                generatedImages = statusResult.generations_by_pk.generated_images;
-              }
-            } 
-            // Formato legado 2: sdGenerationJob
-            else if (statusResult.sdGenerationJob) {
-              status = statusResult.sdGenerationJob.status;
-              
-              if (status === "COMPLETE" && statusResult.sdGenerationJob.generatedImages) {
-                generatedImages = statusResult.sdGenerationJob.generatedImages;
-              }
-            } else {
-              console.error("Formato de resposta desconhecido para status:", statusResult);
-              updatePlaceholderStatus(placeholderId, 'Formato de resposta desconhecido', 'error');
-              throw new Error("Não foi possível determinar o status da geração");
-            }
-            
-            if (!status) {
-              console.error("Formato de resposta desconhecido para status:", statusResult);
-              updatePlaceholderStatus(placeholderId, 'Formato de resposta desconhecido', 'error');
-              throw new Error("Não foi possível determinar o status da geração");
-            }
-            
-            isComplete = status === "COMPLETE";
-            
-            // Atualiza o progresso com base nas tentativas
-            const progress = isComplete ? 100 : Math.min(90, Math.floor((statusCheckCount / maxStatusChecks) * 100));
-            updatePlaceholderProgress(placeholderId, progress);
-            
-            if (isComplete) {
-              // Se a geração foi bem-sucedida e há imagens
-              if (generatedImages && generatedImages.length > 0) {
-                // Pega a primeira imagem da lista
-                const image = generatedImages[0];
+              // Formato da documentação oficial (nova versão): campos status e generated_images no nível raiz
+              if (statusResult.status) {
+                status = statusResult.status;
                 
-                // Adiciona a imagem à galeria
-                addImageToGallery({
-                  url: image.url,
-                  id: image.id || generationId
-                }, prompt);
+                if (status === "COMPLETE" && statusResult.generated_images) {
+                  generatedImages = statusResult.generated_images;
+                }
+              } 
+              // Formato legado 1: generations_by_pk
+              else if (statusResult.generations_by_pk) {
+                status = statusResult.generations_by_pk.status;
                 
-                // Remove o placeholder
-                const placeholder = document.getElementById(placeholderId);
-                if (placeholder) placeholder.remove();
+                if (status === "COMPLETE" && statusResult.generations_by_pk.generated_images) {
+                  generatedImages = statusResult.generations_by_pk.generated_images;
+                }
+              } 
+              // Formato legado 2: sdGenerationJob
+              else if (statusResult.sdGenerationJob) {
+                status = statusResult.sdGenerationJob.status;
                 
-                stats.success++;
-                
-                if (onImageGenerated) {
-                  onImageGenerated(image.url, prompt);
+                if (status === "COMPLETE" && statusResult.sdGenerationJob.generatedImages) {
+                  generatedImages = statusResult.sdGenerationJob.generatedImages;
                 }
               } else {
-                // Atualiza o placeholder com erro
-                updatePlaceholderStatus(placeholderId, 'Falha: Sem imagens geradas', 'error');
-                stats.failed++;
+                console.error("Formato de resposta desconhecido para status:", statusResult);
+                updatePlaceholderStatus(placeholderId, 'Formato de resposta desconhecido', 'error');
+                throw new Error("Não foi possível determinar o status da geração");
               }
+              
+              if (!status) {
+                console.error("Formato de resposta desconhecido para status:", statusResult);
+                updatePlaceholderStatus(placeholderId, 'Formato de resposta desconhecido', 'error');
+                throw new Error("Não foi possível determinar o status da geração");
+              }
+              
+              isComplete = status === "COMPLETE";
+              
+              // Atualiza o progresso com base nas tentativas
+              const progress = isComplete ? 100 : Math.min(90, Math.floor((statusCheckCount / maxStatusChecks) * 100));
+              updatePlaceholderProgress(placeholderId, progress);
+              
+              if (isComplete) {
+                // Se a geração foi bem-sucedida e há imagens
+                if (generatedImages && generatedImages.length > 0) {
+                  // Pega a primeira imagem da lista
+                  const image = generatedImages[0];
+                  
+                  // Adiciona a imagem à galeria
+                  addImageToGallery({
+                    url: image.url,
+                    id: image.id || generationId
+                  }, prompt);
+                  
+                  // Se auto-download estiver ativado, baixa a imagem automaticamente
+                  if (autoDownload) {
+                    try {
+                      await downloadSingleImage(image.url, image.id || generationId);
+                      console.log(`Imagem para "${truncateText(prompt, 30)}" baixada automaticamente`);
+                    } catch (downloadError) {
+                      console.warn(`Não foi possível baixar automaticamente a imagem: ${downloadError.message}`);
+                    }
+                  }
+                  
+                  // Remove o placeholder
+                  const placeholder = document.getElementById(placeholderId);
+                  if (placeholder) placeholder.remove();
+                  
+                  stats.success++;
+                  success = true;
+                  
+                  if (onImageGenerated) {
+                    onImageGenerated(image.url, prompt);
+                  }
+                } else {
+                  // Atualiza o placeholder com erro
+                  updatePlaceholderStatus(placeholderId, 'Falha: Sem imagens geradas', 'error');
+                  throw new Error('Sem imagens geradas');
+                }
+              }
+            } catch (statusError) {
+              console.error(`Erro ao verificar status da geração (tentativa ${statusCheckCount}):`, statusError);
+              // Continua tentando nas próximas iterações
             }
-          } catch (statusError) {
-            console.error(`Erro ao verificar status da geração (tentativa ${statusCheckCount}):`, statusError);
-            // Continua tentando nas próximas iterações
+          }
+          
+          // Se saiu do loop sem completar
+          if (!isComplete) {
+            if (window.cancelGeneration) {
+              updatePlaceholderStatus(placeholderId, 'Geração cancelada', 'warning');
+              throw new Error('Geração cancelada pelo usuário');
+            } else {
+              updatePlaceholderStatus(placeholderId, 'Tempo limite excedido', 'error');
+              throw new Error('Tempo limite excedido ao verificar status');
+            }
+          }
+        } catch (error) {
+          console.error(`Erro na tentativa ${attemptCount}/${maxRetries} para prompt "${prompt}":`, error);
+          
+          if (attemptCount >= maxRetries) {
+            updatePlaceholderStatus(placeholderId, `Erro após ${maxRetries} tentativas: ${error.message}`, 'error');
+            stats.failed++;
           }
         }
-        
-        // Se saiu do loop sem completar
-        if (!isComplete) {
-          if (window.cancelGeneration) {
-            updatePlaceholderStatus(placeholderId, 'Geração cancelada', 'warning');
-            stats.failed++;
-          } else {
-            updatePlaceholderStatus(placeholderId, 'Tempo limite excedido', 'error');
-            stats.failed++;
-          }
-        }
-      } catch (error) {
-        console.error(`Erro ao processar prompt "${prompt}":`, error);
-        updatePlaceholderStatus(placeholderId, `Erro: ${error.message}`, 'error');
-        stats.failed++;
       }
     } catch (error) {
       console.error(`Erro ao processar prompt "${prompt}":`, error);
