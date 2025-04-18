@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IMG-LEONARDO.AI-BULK</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="public/css/gallery-view.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -341,6 +342,17 @@
       <section class="gallery-section">
         <h2>Galeria de Imagens <button id="download-all" class="secondary-button hidden"><i class="fas fa-download"></i> Baixar Todas</button></h2>
         
+        <div class="gallery-controls">
+          <div class="view-toggle">
+            <button id="grid-view" class="active" title="Visualização em grade">
+              <i class="fas fa-th"></i> Grade
+            </button>
+            <button id="list-view" title="Visualização em lista">
+              <i class="fas fa-list"></i> Lista
+            </button>
+          </div>
+        </div>
+        
         <div class="stats-panel hidden" id="stats-panel">
           <h3><i class="fas fa-chart-bar"></i> Estatísticas de Geração</h3>
           <div class="stats-grid">
@@ -371,7 +383,7 @@
           </div>
         </div>
         
-        <div id="gallery" class="gallery">
+        <div id="gallery" class="gallery gallery-grid">
           <div id="generation-progress" class="hidden progress-container">
             <div class="progress-bar-container">
               <div id="progress-bar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
@@ -381,7 +393,7 @@
           <div id="generation-status" class="hidden"></div>
           <div id="generation-error" class="hidden error-message"></div>
         </div>
-        <div class="gallery" id="image-gallery"></div>
+        <div class="gallery gallery-grid" id="image-gallery"></div>
       </section>
     </main>
 
@@ -406,5 +418,14 @@
   <!-- Carrega os demais scripts depois que a API já está disponível -->
   <script src="js/api-key-manager.js"></script>
   <script src="app.js"></script>
+  
+  <!-- Modal para visualização de imagem em tamanho grande -->
+  <div id="image-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <img id="modal-image" src="" alt="Visualização em tamanho grande">
+      <div class="modal-caption" id="modal-caption"></div>
+    </div>
+  </div>
 </body>
 </html> 
