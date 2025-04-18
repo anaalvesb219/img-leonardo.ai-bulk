@@ -1,5 +1,7 @@
 # IMG-LEONARDO.AI-BULK
 
+![CI](https://github.com/<user>/img-leonardo.ai-bulk/actions/workflows/ci.yml/badge.svg)
+
 Aplicativo para geração em massa de imagens usando a API do Leonardo AI. Esta ferramenta permite produzir múltiplas imagens a partir de prompts de texto, aproveitando os modelos avançados de IA do Leonardo.
 
 ![Leonardo AI Bulk Generator](https://leonardo.ai/static/logo-7a60a3e0b6b3d0fa411630a9ec6cc172.svg)
