@@ -1,9 +1,9 @@
-/**
+﻿/**
  * IMG-LEONARDO.AI-BULK
- * Aplicativo para geração em massa de imagens usando a API do Leonardo AI via proxy
+ * Aplicativo para geraÃ§Ã£o em massa de imagens usando a API do Leonardo AI via proxy
  */
 
-// Variáveis globais para a aplicação
+// VariÃ¡veis globais para a aplicaÃ§Ã£o
 let elements;
 let state;
 
@@ -11,12 +11,12 @@ let state;
 async function carregarChaveApiDoProxy() {
   try {
     const res = await fetch('http://localhost:3001/proxy/apikey');
-    if (!res.ok) throw new Error('Proxy não retornou a chave');
+    if (!res.ok) throw new Error('Proxy nÃ£o retornou a chave');
 
     const data = await res.json();
     const apiKey = data.apiKey;
 
-    if (!apiKey) throw new Error('Chave não encontrada na resposta');
+    if (!apiKey) throw new Error('Chave nÃ£o encontrada na resposta');
 
     // Preenche o input visual
     const apiKeyInput = document.getElementById('api-key');
@@ -24,23 +24,23 @@ async function carregarChaveApiDoProxy() {
       apiKeyInput.value = apiKey;
     }
 
-    // Validação visual
+    // ValidaÃ§Ã£o visual
     showApiKeyValidationFeedback(true, "Chave carregada automaticamente do proxy");
 
-    // ✅ Usa o leonardoAPI para setar a chave e disparar o evento
+    // âœ… Usa o leonardoAPI para setar a chave e disparar o evento
     if (window.leonardoAPI && typeof window.leonardoAPI.setApiKey === 'function') {
       window.leonardoAPI.setApiKey(apiKey);
     } else {
-      console.warn('leonardoAPI não está disponível no escopo global');
+      console.warn('leonardoAPI nÃ£o estÃ¡ disponÃ­vel no escopo global');
     }
 
   } catch (err) {
-    console.warn("❌ Erro ao carregar chave da API:", err.message);
-    showApiKeyValidationFeedback(false, "Não foi possível carregar a chave da API automaticamente.");
+    console.warn("âŒ Erro ao carregar chave da API:", err.message);
+    showApiKeyValidationFeedback(false, "NÃ£o foi possÃ­vel carregar a chave da API automaticamente.");
   }
 }
 
-// Função para carregar a chave API do arquivo .env
+// FunÃ§Ã£o para carregar a chave API do arquivo .env
 async function carregarChaveApiDoArquivo() {
   try {
     console.log('Tentando carregar a chave API do arquivo .env via endpoint /api/key...');
@@ -70,7 +70,7 @@ async function carregarChaveApiDoArquivo() {
         if (apiKeyInput) {
           apiKeyInput.value = apiKey;
           
-          // Mostra feedback visual de validação
+          // Mostra feedback visual de validaÃ§Ã£o
           showApiKeyValidationFeedback(true, 'Chave API carregada com sucesso do arquivo .env');
         }
         
@@ -78,13 +78,13 @@ async function carregarChaveApiDoArquivo() {
         if (window.leonardoAPI && typeof window.leonardoAPI.setApiKey === 'function') {
           window.leonardoAPI.setApiKey(apiKey);
           
-          // Dispara evento de validação para que o sistema continue o fluxo normal
+          // Dispara evento de validaÃ§Ã£o para que o sistema continue o fluxo normal
           const event = new CustomEvent('keyValidated', {
             detail: { key: apiKey, valid: true }
           });
           document.dispatchEvent(event);
           
-          // Tenta carregar os modelos agora que temos uma chave válida
+          // Tenta carregar os modelos agora que temos uma chave vÃ¡lida
           setTimeout(() => {
             loadModels();
           }, 500);
@@ -104,7 +104,7 @@ async function carregarChaveApiDoArquivo() {
   }
 }
 
-// Função para salvar a chave API no arquivo .env
+// FunÃ§Ã£o para salvar a chave API no arquivo .env
 async function salvarChaveApiNoArquivo(apiKey) {
   try {
     const response = await fetch('/api/key', {
@@ -133,8 +133,8 @@ async function salvarChaveApiNoArquivo(apiKey) {
   }
 }
 
-// Função para lidar com o salvamento e validação da API key
-async function handleSaveApiKey() {
+// FunÃ§Ã£o para lidar com o salvamento e validaÃ§Ã£o da API key
+async function handleKeyValidation() {
   const apiKeyInput = document.getElementById('api-key');
   const apiKey = apiKeyInput.value.trim();
   
@@ -154,22 +154,22 @@ async function handleSaveApiKey() {
     if (window.leonardoAPI && typeof window.leonardoAPI.setApiKey === 'function') {
       window.leonardoAPI.setApiKey(apiKey);
       
-      // Realiza uma requisição de teste para validar a chave
+      // Realiza uma requisiÃ§Ã£o de teste para validar a chave
       const isValid = await window.leonardoAPI.validateApiKey();
       
       if (isValid) {
         // Salva a chave no arquivo .env
         await salvarChaveApiNoArquivo(apiKey);
         
-        showApiKeyValidationFeedback(true, 'Chave API válida!');
+        showApiKeyValidationFeedback(true, 'Chave API vÃ¡lida!');
         
-        // Dispara evento de validação
+        // Dispara evento de validaÃ§Ã£o
         const event = new CustomEvent('keyValidated', {
           detail: { key: apiKey, valid: true }
         });
         document.dispatchEvent(event);
       } else {
-        showApiKeyValidationFeedback(false, 'Chave API inválida. Verifique e tente novamente.');
+        showApiKeyValidationFeedback(false, 'Chave API invÃ¡lida. Verifique e tente novamente.');
       }
     } else {
       showApiKeyValidationFeedback(false, 'Erro ao inicializar o gerenciador de API.');
@@ -178,13 +178,13 @@ async function handleSaveApiKey() {
     console.error('Erro ao validar a chave API:', error);
     showApiKeyValidationFeedback(false, 'Erro ao validar a chave API. Verifique o console.');
   } finally {
-    // Restaura o botão
+    // Restaura o botÃ£o
     saveKeyBtn.innerHTML = originalBtnText;
     saveKeyBtn.disabled = false;
   }
 }
 
-// Função para exibir feedback visual da validação da chave API
+// FunÃ§Ã£o para exibir feedback visual da validaÃ§Ã£o da chave API
 function showApiKeyValidationFeedback(isValid, message) {
   const feedbackElement = document.getElementById('api-key-feedback');
   
@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Configura os event listeners para a chave API
   const saveKeyBtn = document.getElementById('save-key');
   if (saveKeyBtn) {
-    saveKeyBtn.addEventListener('click', handleSaveApiKey);
+    saveKeyBtn.addEventListener('click', handleKeyValidation);
   }
   
   const toggleKeyBtn = document.getElementById('toggle-key');
@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
     apiKeyInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        handleSaveApiKey();
+        handleKeyValidation();
       }
     });
   }
@@ -238,14 +238,14 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
   console.log("App iniciando...");
   
-  // Com o novo proxy, não precisamos mais gerenciar a chave API no front-end
+  // Com o novo proxy, nÃ£o precisamos mais gerenciar a chave API no front-end
   if (window.leonardoAPI) {
     console.log('API do Leonardo inicializada com proxy local');
   } else {
-    console.error('Instância leonardoAPI não encontrada no escopo global!');
+    console.error('InstÃ¢ncia leonardoAPI nÃ£o encontrada no escopo global!');
   }
   
-  console.log('DOM completamente carregado, inicializando aplicação...');
+  console.log('DOM completamente carregado, inicializando aplicaÃ§Ã£o...');
   
   // Tenta carregar a chave da API automaticamente do proxy
   carregarChaveApiDoProxy();
@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Ajustamos os eventos do ApiKeyManager para trabalhar com o proxy
   setupApiKeyManagerEvents();
   
-  // Aguardar que o objeto leonardoAPI esteja disponível
+  // Aguardar que o objeto leonardoAPI esteja disponÃ­vel
   checkAndInitialize();
 });
 
@@ -261,26 +261,26 @@ document.addEventListener('DOMContentLoaded', () => {
  * Configura os listeners de eventos do ApiKeyManager
  */
 function setupApiKeyManagerEvents() {
-  // Evento quando a chave é alterada (mantido por compatibilidade)
+  // Evento quando a chave Ã© alterada (mantido por compatibilidade)
   apiKeyManager.on('keyChanged', (data) => {
     console.log('Evento keyChanged recebido:', data);
     showNotification('Proxy configurado com sucesso', 'success');
   });
   
-  // Evento quando a chave é validada (adaptado para o proxy)
+  // Evento quando a chave Ã© validada (adaptado para o proxy)
   apiKeyManager.on('keyValidated', (data) => {
     console.log('Evento keyValidated recebido:', data);
     
     if (data.isValid) {
       console.log('Proxy validado com sucesso, carregando modelos...');
       
-      // Garante que a função loadModels exista antes de chamá-la
+      // Garante que a funÃ§Ã£o loadModels exista antes de chamÃ¡-la
       if (typeof loadModels === 'function') {
         showNotification('Proxy configurado. Carregando modelos...', 'success');
         setTimeout(() => {
           try {
             loadModels().catch(err => {
-              console.error('Erro ao carregar modelos após validação:', err);
+              console.error('Erro ao carregar modelos apÃ³s validaÃ§Ã£o:', err);
               showNotification('Erro ao carregar modelos, tente novamente', 'error');
             });
           } catch (error) {
@@ -288,75 +288,75 @@ function setupApiKeyManagerEvents() {
           }
         }, 500);
       } else {
-        console.error('Função loadModels não encontrada após validação do proxy');
+        console.error('FunÃ§Ã£o loadModels nÃ£o encontrada apÃ³s validaÃ§Ã£o do proxy');
       }
     } else {
-      console.error('Validação do proxy falhou');
-      showNotification('Não foi possível conectar ao proxy', 'error');
+      console.error('ValidaÃ§Ã£o do proxy falhou');
+      showNotification('NÃ£o foi possÃ­vel conectar ao proxy', 'error');
     }
   });
 }
 
 /**
- * Verifica se o objeto leonardoAPI está disponível e inicializa a aplicação
+ * Verifica se o objeto leonardoAPI estÃ¡ disponÃ­vel e inicializa a aplicaÃ§Ã£o
  */
 function checkAndInitialize() {
   if (typeof window.leonardoAPI === 'undefined') {
-    console.log('Objeto leonardoAPI ainda não disponível, aguardando...');
+    console.log('Objeto leonardoAPI ainda nÃ£o disponÃ­vel, aguardando...');
     
     // Verificar novamente em 100ms
     setTimeout(checkAndInitialize, 100);
     return;
   }
   
-  console.log('Objeto leonardoAPI disponível, inicializando aplicação...');
+  console.log('Objeto leonardoAPI disponÃ­vel, inicializando aplicaÃ§Ã£o...');
   initializeApp();
 }
 
 /**
- * Inicializa a aplicação
+ * Inicializa a aplicaÃ§Ã£o
  */
 async function init() {
-  console.log("Inicializando aplicação...");
+  console.log("Inicializando aplicaÃ§Ã£o...");
 
-  // Verifica se o objeto leonardoAPI está disponível
+  // Verifica se o objeto leonardoAPI estÃ¡ disponÃ­vel
   if (typeof window.leonardoAPI === 'undefined' || !window.leonardoAPI) {
-    console.error("Objeto leonardoAPI não encontrado!");
-    showNotification('Erro ao inicializar a API. Recarregue a página.', 'error');
+    console.error("Objeto leonardoAPI nÃ£o encontrado!");
+    showNotification('Erro ao inicializar a API. Recarregue a pÃ¡gina.', 'error');
     
-    // Última tentativa de criar uma instância manualmente
+    // Ãšltima tentativa de criar uma instÃ¢ncia manualmente
     try {
-      console.log("Tentando criar instância de LeonardoAPI manualmente...");
+      console.log("Tentando criar instÃ¢ncia de LeonardoAPI manualmente...");
       window.leonardoAPI = new LeonardoAPI();
-      console.log("Instância de LeonardoAPI criada com sucesso como fallback:", window.leonardoAPI);
+      console.log("InstÃ¢ncia de LeonardoAPI criada com sucesso como fallback:", window.leonardoAPI);
     } catch (error) {
-      console.error("Erro fatal ao criar instância de LeonardoAPI:", error);
-      alert("Erro crítico ao inicializar a aplicação. Por favor, recarregue a página.");
-      return; // Interrompe a execução da função
+      console.error("Erro fatal ao criar instÃ¢ncia de LeonardoAPI:", error);
+      alert("Erro crÃ­tico ao inicializar a aplicaÃ§Ã£o. Por favor, recarregue a pÃ¡gina.");
+      return; // Interrompe a execuÃ§Ã£o da funÃ§Ã£o
     }
   } else {
-    console.log("LeonardoAPI já está disponível:", window.leonardoAPI);
+    console.log("LeonardoAPI jÃ¡ estÃ¡ disponÃ­vel:", window.leonardoAPI);
   }
 
   // Tenta carregar a chave da API automaticamente do proxy novamente (caso o DOMContentLoaded tenha falhado)
   try {
     await carregarChaveApiDoProxy();
   } catch (error) {
-    console.warn("Falha ao carregar chave da API durante inicialização:", error);
+    console.warn("Falha ao carregar chave da API durante inicializaÃ§Ã£o:", error);
   }
 
-  // Tenta validar a conexão com o proxy automaticamente na inicialização
+  // Tenta validar a conexÃ£o com o proxy automaticamente na inicializaÃ§Ã£o
   try {
-    console.log('Verificando conexão com o proxy automaticamente...');
+    console.log('Verificando conexÃ£o com o proxy automaticamente...');
     
-    // Verifica se a API está funcionando
+    // Verifica se a API estÃ¡ funcionando
     const isValid = await window.leonardoAPI.validateApiKey();
       
       if (isValid) {
       console.log('API validada com sucesso!');
-        // loadModels será chamado pelo evento keyValidated
+        // loadModels serÃ¡ chamado pelo evento keyValidated
       } else {
-      console.error('Não foi possível validar a API');
+      console.error('NÃ£o foi possÃ­vel validar a API');
       showNotification('Falha ao verificar a API. Tente validar manualmente.', 'warning');
       }
     } catch (error) {
@@ -366,19 +366,19 @@ async function init() {
 }
 
 /**
- * Inicializa a aplicação
+ * Inicializa a aplicaÃ§Ã£o
  */
 function initializeApp() {
-  console.log("Inicializando elementos da aplicação...");
+  console.log("Inicializando elementos da aplicaÃ§Ã£o...");
   
   // Inicializa elementos globais
   elements = {
-    // Configurações da API
+    // ConfiguraÃ§Ãµes da API
     apiKey: document.getElementById('api-key'),
     saveKey: document.getElementById('save-key'),
     toggleKey: document.getElementById('toggle-key'),
     
-    // Configurações de geração
+    // ConfiguraÃ§Ãµes de geraÃ§Ã£o
     modelSelect: document.getElementById('model-select'),
     modelLoadingSpinner: document.getElementById('model-loading-spinner'),
     presetDimensions: document.getElementById('preset-dimensions'),
@@ -388,12 +388,12 @@ function initializeApp() {
     negativePrompt: document.getElementById('negative-prompt'),
     seed: document.getElementById('seed'),
     
-    // Configurações de PhotoReal
+    // ConfiguraÃ§Ãµes de PhotoReal
     photoRealCheckbox: document.getElementById('photoreal-checkbox'),
     photoRealOptions: document.getElementById('photoreal-options'),
     photoRealStyle: document.getElementById('photoreal-style'),
     
-    // Configurações de Phoenix
+    // ConfiguraÃ§Ãµes de Phoenix
     phoenixCheckbox: document.getElementById('phoenix-checkbox'),
     phoenixOptions: document.getElementById('phoenix-options'),
     phoenixContrast: document.getElementById('phoenix-contrast'),
@@ -402,7 +402,7 @@ function initializeApp() {
     phoenixUltraCheckbox: document.getElementById('phoenix-ultra-checkbox'),
     phoenixEnhancePromptCheckbox: document.getElementById('phoenix-enhance-prompt-checkbox'),
     
-    // Configurações de Flux
+    // ConfiguraÃ§Ãµes de Flux
     fluxCheckbox: document.getElementById('flux-checkbox'),
     fluxOptions: document.getElementById('flux-options'),
     fluxContrast: document.getElementById('flux-contrast'),
@@ -410,7 +410,7 @@ function initializeApp() {
     fluxEnhancePromptCheckbox: document.getElementById('flux-enhance-prompt-checkbox'),
     fluxUltraCheckbox: document.getElementById('flux-ultra-checkbox'),
     
-    // Exemplo de requisição - Verificar se o elemento existe antes de tentar acessar
+    // Exemplo de requisiÃ§Ã£o - Verificar se o elemento existe antes de tentar acessar
     sampleRequest: document.getElementById('sample-request') ? 
       document.getElementById('sample-request').querySelector('code') : null,
     
@@ -432,7 +432,7 @@ function initializeApp() {
     downloadAllButton: document.getElementById('download-all')
   };
   
-  // Inicializa o estado da aplicação
+  // Inicializa o estado da aplicaÃ§Ã£o
   state = {
     isGenerating: false,
     generationQueue: [],
@@ -442,15 +442,15 @@ function initializeApp() {
     totalImagesGenerated: 0
   };
   
-  // Valida elementos obrigatórios
+  // Valida elementos obrigatÃ³rios
   if (!elements.saveKey || !elements.modelSelect || 
       !elements.promptsTextarea || !elements.generateButton) {
-    console.error("Elementos essenciais não encontrados!");
-    alert("Erro ao carregar elementos da interface. Por favor, recarregue a página.");
+    console.error("Elementos essenciais nÃ£o encontrados!");
+    alert("Erro ao carregar elementos da interface. Por favor, recarregue a pÃ¡gina.");
     return;
   }
   
-  // Inicializa funções específicas
+  // Inicializa funÃ§Ãµes especÃ­ficas
   setupModelSelectEvents();
   setupDimensionSelect();
   setupRangeSliders();
@@ -460,7 +460,7 @@ function initializeApp() {
   
   // Inicializa os event listeners principais
   if (elements.saveKey) {
-    elements.saveKey.addEventListener('click', handleSaveApiKey);
+    elements.saveKey.addEventListener('click', handleKeyValidation);
   }
   
   if (elements.generateButton) {
@@ -479,7 +479,7 @@ function initializeApp() {
     elements.downloadAllButton.addEventListener('click', downloadAllImages);
   }
   
-  // Define a visualização inicial correta para componentes opcionais
+  // Define a visualizaÃ§Ã£o inicial correta para componentes opcionais
   const hasPhotoReal = !!elements.photoRealCheckbox;
   const hasPhoenix = !!elements.phoenixCheckbox;
   const hasFlux = !!elements.fluxCheckbox;
@@ -492,14 +492,14 @@ function initializeApp() {
     elements.phoenixOptions.style.display = 'none';
   }
   
-  // Inicializa a aplicação
+  // Inicializa a aplicaÃ§Ã£o
   init();
   
-  console.log("Aplicação inicializada com sucesso!");
+  console.log("AplicaÃ§Ã£o inicializada com sucesso!");
 }
 
 /**
- * Configura os event listeners para interação do usuário
+ * Configura os event listeners para interaÃ§Ã£o do usuÃ¡rio
  */
 function setupEventListeners() {
   console.log("Configurando event listeners...");
@@ -507,16 +507,16 @@ function setupEventListeners() {
   // Toggle para mostrar/esconder a chave de API
   const toggleKeyButton = document.getElementById('toggle-key');
   if (toggleKeyButton) {
-    console.log("Adicionando event listener ao botão toggleKey");
+    console.log("Adicionando event listener ao botÃ£o toggleKey");
     toggleKeyButton.addEventListener('click', toggleApiKeyVisibility);
   }
 
   // Salvar a chave de API
   if (elements.saveKey) {
-    console.log("Adicionando event listener ao botão saveKey");
-    elements.saveKey.addEventListener('click', handleSaveApiKey);
+    console.log("Adicionando event listener ao botÃ£o saveKey");
+    elements.saveKey.addEventListener('click', handleKeyValidation);
   } else {
-    console.error("Elemento saveKey não encontrado!");
+    console.error("Elemento saveKey nÃ£o encontrado!");
   }
 
   // Atualiza o valor do Guidance Scale quando o slider muda
@@ -526,17 +526,17 @@ function setupEventListeners() {
     });
   }
 
-  // Botão para gerar imagens
+  // BotÃ£o para gerar imagens
   if (elements.generateButton) {
     elements.generateButton.addEventListener('click', startImageGeneration);
   }
 
-  // Botão para baixar todas as imagens
+  // BotÃ£o para baixar todas as imagens
   if (elements.downloadAllButton) {
     elements.downloadAllButton.addEventListener('click', downloadAllImages);
   }
   
-  // Botão para cancelar a geração
+  // BotÃ£o para cancelar a geraÃ§Ã£o
   const cancelButton = document.getElementById('cancel-button');
   if (cancelButton) {
     cancelButton.addEventListener('click', cancelGeneration);
@@ -563,7 +563,7 @@ function setupEventListeners() {
         elements.phoenixOptions.classList.toggle('active', this.checked);
       }
       
-      // Quando Phoenix é marcado, desmarca o PhotoReal para evitar conflitos
+      // Quando Phoenix Ã© marcado, desmarca o PhotoReal para evitar conflitos
       if (this.checked && elements.photoRealCheckbox) {
         elements.photoRealCheckbox.checked = false;
         if (elements.photoRealOptions) {
@@ -581,7 +581,7 @@ function setupEventListeners() {
   // Configura o event listener para o checkbox de Alchemy do Phoenix
   if (elements.phoenixAlchemyCheckbox) {
     elements.phoenixAlchemyCheckbox.addEventListener('change', function() {
-      // Se alchemy está marcado, verifica se o contraste é adequado
+      // Se alchemy estÃ¡ marcado, verifica se o contraste Ã© adequado
       if (this.checked) {
         const contrast = parseFloat(elements.phoenixContrast.value);
         if (contrast < 2.5) {
@@ -600,7 +600,7 @@ function setupEventListeners() {
   // Configura o event listener para o contraste do Phoenix
   if (elements.phoenixContrast) {
     elements.phoenixContrast.addEventListener('change', function() {
-      // Verifica se alchemy está marcado e ajusta o contraste se necessário
+      // Verifica se alchemy estÃ¡ marcado e ajusta o contraste se necessÃ¡rio
       if (elements.phoenixAlchemyCheckbox && elements.phoenixAlchemyCheckbox.checked) {
         const contrast = parseFloat(this.value);
         if (contrast < 2.5) {
@@ -624,13 +624,13 @@ function toggleApiKeyVisibility() {
   console.log("Alternando visibilidade da chave API");
   
   if (!elements.apiKey) {
-    console.error("Elemento apiKey não encontrado");
+    console.error("Elemento apiKey nÃ£o encontrado");
     return;
   }
   
   const toggleButton = document.getElementById('toggle-key');
   if (!toggleButton) {
-    console.error("Botão toggle não encontrado");
+    console.error("BotÃ£o toggle nÃ£o encontrado");
     return;
   }
   
@@ -646,9 +646,9 @@ function toggleApiKeyVisibility() {
 }
 
 /**
- * Lida com o clique no botão de validação
+ * Lida com o clique no botÃ£o de validaÃ§Ã£o
  */
-async function handleSaveApiKey() {
+async function handleKeyValidation() {
   console.log("Validando chave da API...");
   
   // Reseta qualquer feedback visual anterior
@@ -659,14 +659,14 @@ async function handleSaveApiKey() {
   const apiKeyInput = document.getElementById('api-key');
   
   if (!apiKeyInput) {
-    console.error("Elemento api-key não encontrado!");
+    console.error("Elemento api-key nÃ£o encontrado!");
     showNotification('Erro ao acessar o campo da chave API', 'error');
     return;
   }
   
   const apiKey = apiKeyInput.value.trim();
   
-  // Validação básica
+  // ValidaÃ§Ã£o bÃ¡sica
   if (!apiKey) {
     console.error("Chave API vazia!");
       showNotification('Por favor, aguarde enquanto carregamos a chave do proxy ou insira uma manualmente', 'warning');
@@ -676,12 +676,12 @@ async function handleSaveApiKey() {
         await carregarChaveApiDoProxy();
       } catch (error) {
         console.error("Erro ao carregar chave do proxy:", error);
-        showApiKeyValidationFeedback(false, 'Não foi possível carregar a chave do proxy');
+        showApiKeyValidationFeedback(false, 'NÃ£o foi possÃ­vel carregar a chave do proxy');
       }
     return;
   }
 
-    // Mostrar notificação de que está tentando validar
+    // Mostrar notificaÃ§Ã£o de que estÃ¡ tentando validar
     showNotification('Validando chave API...', 'info');
     
     // Aplicar a chave ao objeto leonardoAPI e validar
@@ -695,13 +695,13 @@ async function handleSaveApiKey() {
         showNotification('Chave API validada com sucesso!', 'success');
       } else {
         console.error("Falha ao validar a chave API");
-        showApiKeyValidationFeedback(false, "Chave API inválida. Verifique se está correta.");
-        showNotification('Falha ao validar a chave API. Verifique se está correta.', 'error');
+        showApiKeyValidationFeedback(false, "Chave API invÃ¡lida. Verifique se estÃ¡ correta.");
+        showNotification('Falha ao validar a chave API. Verifique se estÃ¡ correta.', 'error');
       }
     } else {
-      console.error("Objeto leonardoAPI não disponível");
-      showApiKeyValidationFeedback(false, "Falha na inicialização da API");
-      showNotification('Erro ao inicializar a API. Recarregue a página.', 'error');
+      console.error("Objeto leonardoAPI nÃ£o disponÃ­vel");
+      showApiKeyValidationFeedback(false, "Falha na inicializaÃ§Ã£o da API");
+      showNotification('Erro ao inicializar a API. Recarregue a pÃ¡gina.', 'error');
     }
   } catch (error) {
     console.error("Erro ao validar a chave API:", error);
@@ -711,8 +711,8 @@ async function handleSaveApiKey() {
 }
 
 /**
- * Exibe feedback visual sobre a validação da chave API
- * @param {boolean} isValid - Se a chave é válida
+ * Exibe feedback visual sobre a validaÃ§Ã£o da chave API
+ * @param {boolean} isValid - Se a chave Ã© vÃ¡lida
  * @param {string} message - Mensagem a ser exibida
  */
 function showApiKeyValidationFeedback(isValid, message) {
@@ -732,7 +732,7 @@ function showApiKeyValidationFeedback(isValid, message) {
   const feedbackId = 'api-key-feedback';
   let feedbackEl = document.getElementById(feedbackId);
   
-  // Se já existe, remove para recriar
+  // Se jÃ¡ existe, remove para recriar
   if (feedbackEl) feedbackEl.remove();
   
   // Criar novo elemento de feedback
@@ -744,7 +744,7 @@ function showApiKeyValidationFeedback(isValid, message) {
     <span>${message}</span>
   `;
   
-  // Inserir após o container da chave
+  // Inserir apÃ³s o container da chave
   keyContainer.parentNode.insertBefore(feedbackEl, keyContainer.nextSibling);
   
   // Configurar timer para remover feedback depois de um tempo
@@ -752,7 +752,7 @@ function showApiKeyValidationFeedback(isValid, message) {
 }
 
 /**
- * Limpa o feedback visual da validação da chave API
+ * Limpa o feedback visual da validaÃ§Ã£o da chave API
  */
 function resetApiKeyFeedback() {
   const apiKeyInput = document.getElementById('api-key');
@@ -778,14 +778,14 @@ function resetApiKeyFeedback() {
 }
 
 /**
- * Carrega os modelos disponíveis da API Leonardo
+ * Carrega os modelos disponÃ­veis da API Leonardo
  */
 async function loadModels() {
   console.log("Carregando modelos...");
   
-  // Verificar se a variável elements está definida
+  // Verificar se a variÃ¡vel elements estÃ¡ definida
   if (typeof elements === 'undefined') {
-    console.error("Objeto 'elements' não está definido. Executando initializeApp() primeiro.");
+    console.error("Objeto 'elements' nÃ£o estÃ¡ definido. Executando initializeApp() primeiro.");
     initializeApp();
     
     // Verificar novamente se o objeto elements foi inicializado corretamente
@@ -795,9 +795,9 @@ async function loadModels() {
     }
   }
   
-  // Verificar se os elementos necessários existem
+  // Verificar se os elementos necessÃ¡rios existem
   if (!elements.modelSelect) {
-    console.error("Elemento modelSelect não encontrado");
+    console.error("Elemento modelSelect nÃ£o encontrado");
     return;
   }
   
@@ -813,7 +813,7 @@ async function loadModels() {
   elements.modelSelect.innerHTML = '<option value="">Carregando modelos...</option>';
   
   try {
-    // Obtém modelos do endpoint específico que criamos no servidor
+    // ObtÃ©m modelos do endpoint especÃ­fico que criamos no servidor
     console.log("Obtendo modelos via endpoint /proxy/models...");
     const response = await fetch('/proxy/models');
     
@@ -824,8 +824,8 @@ async function loadModels() {
     const data = await response.json();
     
     if (!data || !Array.isArray(data.models)) {
-      console.warn("Resposta do endpoint não contém array de modelos:", data);
-      throw new Error("Formato de resposta inválido");
+      console.warn("Resposta do endpoint nÃ£o contÃ©m array de modelos:", data);
+      throw new Error("Formato de resposta invÃ¡lido");
     }
     
     const models = data.models;
@@ -833,7 +833,7 @@ async function loadModels() {
     
     // Verifica se o elemento modelSelect ainda existe
     if (!elements.modelSelect) {
-      console.error("Elemento modelSelect não encontrado após carregar modelos");
+      console.error("Elemento modelSelect nÃ£o encontrado apÃ³s carregar modelos");
       return;
     }
     
@@ -873,15 +873,15 @@ async function loadModels() {
     
   } catch (error) {
     console.error("Erro ao carregar modelos:", error);
-    showNotification('Falha ao carregar modelos. Usando modelos padrão.', 'warning');
+    showNotification('Falha ao carregar modelos. Usando modelos padrÃ£o.', 'warning');
     
     // Verificar novamente se o elemento modelSelect existe
     if (!elements.modelSelect) {
-      console.error("Elemento modelSelect não está disponível para carregar modelos padrão");
+      console.error("Elemento modelSelect nÃ£o estÃ¡ disponÃ­vel para carregar modelos padrÃ£o");
       return;
     }
     
-    // Usa modelos padrão em caso de erro
+    // Usa modelos padrÃ£o em caso de erro
     const defaultModels = [
       { id: 'de7d3faf-762f-48e0-b3b7-9d0ac3a3fcf3', name: 'Leonardo Phoenix 1.0', modelType: 'Phoenix' },
       { id: '6b645e3a-d64f-4341-a6d8-7a3690fbf042', name: 'Leonardo Phoenix 0.9', modelType: 'Phoenix' },
@@ -896,12 +896,12 @@ async function loadModels() {
       { id: '1dd50843-d653-4516-a8e3-f0238ee453ff', name: 'Flux Schnell', modelType: 'Flux' }
     ];
     
-    // Simula um pequeno atraso para dar feedback ao usuário
+    // Simula um pequeno atraso para dar feedback ao usuÃ¡rio
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Usa modelos padrão para contornar problemas de API
+    // Usa modelos padrÃ£o para contornar problemas de API
     const models = defaultModels;
-    console.log(`Usando ${models.length} modelos padrão porque o servidor falhou`);
+    console.log(`Usando ${models.length} modelos padrÃ£o porque o servidor falhou`);
     
     try {
       // Limpa o select de modelos
@@ -935,7 +935,7 @@ async function loadModels() {
         elements.modelSelect.appendChild(optgroup);
       });
     } catch (innerError) {
-      console.error("Erro ao carregar modelos padrão:", innerError);
+      console.error("Erro ao carregar modelos padrÃ£o:", innerError);
     }
     
   } finally {
@@ -954,13 +954,13 @@ async function loadModels() {
 }
 
 /**
- * Obtém as dimensões selecionadas
+ * ObtÃ©m as dimensÃµes selecionadas
  * @returns {Object} Objeto com width e height
  */
 function getSelectedDimensions() {
   const dimensionValue = elements.presetDimensions.value;
   if (!dimensionValue) {
-    showNotification('Selecione uma dimensão para a imagem', 'error');
+    showNotification('Selecione uma dimensÃ£o para a imagem', 'error');
     return null;
   }
   
@@ -969,7 +969,7 @@ function getSelectedDimensions() {
 }
 
 /**
- * Inicia o processo de geração de imagens
+ * Inicia o processo de geraÃ§Ã£o de imagens
  */
 async function startImageGeneration() {
   // Valida os inputs
@@ -987,23 +987,23 @@ async function startImageGeneration() {
 
   const dimensions = getSelectedDimensions();
   if (!dimensions) {
-    showNotification('error', 'Por favor, selecione as dimensões da imagem.');
+    showNotification('error', 'Por favor, selecione as dimensÃµes da imagem.');
     return;
   }
   
   const numImages = parseInt(elements.numImages.value) || 1;
   if (numImages > 4) {
-    showNotification('warning', 'Máximo de 4 imagens por prompt permitido. O valor será ajustado.');
+    showNotification('warning', 'MÃ¡ximo de 4 imagens por prompt permitido. O valor serÃ¡ ajustado.');
     elements.numImages.value = 4;
   }
 
-  // Validação adicional para garantir que todos os campos obrigatórios estejam preenchidos
+  // ValidaÃ§Ã£o adicional para garantir que todos os campos obrigatÃ³rios estejam preenchidos
   if (!prompts[0] || !modelId || !dimensions.width || !dimensions.height) {
-    showNotification('error', 'Preencha todos os campos obrigatórios.');
+    showNotification('error', 'Preencha todos os campos obrigatÃ³rios.');
     return;
   }
 
-  // Validação para modelos Flux
+  // ValidaÃ§Ã£o para modelos Flux
   const fluxModelIds = [
     'b2614463-296c-462a-9586-aafdb8f00e36', // Flux Dev (Flux Precision)
     '1dd50843-d653-4516-a8e3-f0238ee453ff'  // Flux Schnell (Flux Speed)
@@ -1015,19 +1015,19 @@ async function startImageGeneration() {
       return;
     }
     
-    // Validação para contraste do Flux
+    // ValidaÃ§Ã£o para contraste do Flux
     if (elements.fluxContrast) {
       const validContrasts = [1.0, 1.3, 1.8, 2.5, 3, 3.5, 4, 4.5];
       const selectedContrast = parseFloat(elements.fluxContrast.value);
       
       if (!validContrasts.includes(selectedContrast)) {
-        showNotification('warning', 'Valor de contraste inválido para Flux. Ajustando para 3.5 (Médio).');
+        showNotification('warning', 'Valor de contraste invÃ¡lido para Flux. Ajustando para 3.5 (MÃ©dio).');
         elements.fluxContrast.value = "3.5";
       }
     }
   }
 
-  // Validação para PhotoReal v2
+  // ValidaÃ§Ã£o para PhotoReal v2
   if (elements.photoRealCheckbox && elements.photoRealCheckbox.checked) {
     const xlModelsIds = [
       'aa77f04e-3eec-4034-9c07-d0f619684628', // Leonardo Kino XL
@@ -1041,7 +1041,7 @@ async function startImageGeneration() {
     }
   }
 
-  // Validação para Phoenix
+  // ValidaÃ§Ã£o para Phoenix
   if (elements.phoenixCheckbox && elements.phoenixCheckbox.checked) {
     const phoenixModelIds = [
       'de7d3faf-762f-48e0-b3b7-9d0ac3a3fcf3', // Leonardo Phoenix 1.0
@@ -1053,7 +1053,7 @@ async function startImageGeneration() {
       return;
     }
     
-    // Validação para Alchemy e contraste
+    // ValidaÃ§Ã£o para Alchemy e contraste
     if (elements.phoenixAlchemyCheckbox && elements.phoenixAlchemyCheckbox.checked) {
       const contrast = parseFloat(elements.phoenixContrast.value);
       if (contrast < 2.5) {
@@ -1063,12 +1063,12 @@ async function startImageGeneration() {
     }
   }
 
-  // Atualiza a interface para o modo de geração
+  // Atualiza a interface para o modo de geraÃ§Ã£o
   updateInterfaceForGeneration(true);
   clearGeneratedImages();
 
   try {
-    // Utiliza a função processPrompts para gerar as imagens
+    // Utiliza a funÃ§Ã£o processPrompts para gerar as imagens
     const stats = await processPrompts(
       prompts, 
       modelId, 
@@ -1078,21 +1078,21 @@ async function startImageGeneration() {
       (percentage, message) => {
         updateProgressBar(percentage, message);
       },
-      // Callback quando uma imagem é gerada
+      // Callback quando uma imagem Ã© gerada
       (imageUrl, prompt) => {
         console.log(`Imagem gerada para "${truncateText(prompt, 30)}"`);
       }
     );
 
     // Atualiza a interface com os resultados
-    const message = `Geração concluída: ${stats.success} sucesso, ${stats.failed} falhas.`;
+    const message = `GeraÃ§Ã£o concluÃ­da: ${stats.success} sucesso, ${stats.failed} falhas.`;
     showNotification('success', message);
     console.log(message);
   } catch (error) {
-    console.error('Erro durante a geração de imagens:', error);
-    showNotification('error', 'Ocorreu um erro durante a geração de imagens. Verifique o console para mais detalhes.');
+    console.error('Erro durante a geraÃ§Ã£o de imagens:', error);
+    showNotification('error', 'Ocorreu um erro durante a geraÃ§Ã£o de imagens. Verifique o console para mais detalhes.');
   } finally {
-    // Restaura a interface após a geração
+    // Restaura a interface apÃ³s a geraÃ§Ã£o
     updateInterfaceForGeneration(false);
   }
 }
@@ -1102,7 +1102,7 @@ async function startImageGeneration() {
  */
 async function downloadAllImages() {
   if (state.generatedImages.length === 0) {
-    showNotification('Não há imagens para baixar', 'warning');
+    showNotification('NÃ£o hÃ¡ imagens para baixar', 'warning');
     return;
   }
 
@@ -1171,8 +1171,8 @@ function loadScript(url) {
 }
 
 /**
- * Cria um placeholder para uma imagem que está sendo gerada
- * @param {string} id - ID único para o placeholder
+ * Cria um placeholder para uma imagem que estÃ¡ sendo gerada
+ * @param {string} id - ID Ãºnico para o placeholder
  * @param {string} prompt - O prompt usado para gerar a imagem
  */
 function createImagePlaceholder(id, prompt) {
@@ -1221,13 +1221,13 @@ function updateImagePlaceholderWithError(id, errorMessage) {
 }
 
 /**
- * Adiciona uma imagem à galeria e ao estado da aplicação
+ * Adiciona uma imagem Ã  galeria e ao estado da aplicaÃ§Ã£o
  * @param {object} image - Dados da imagem (url, id)
  * @param {string} prompt - O prompt usado para gerar a imagem
  */
 function addImageToGallery(image, prompt) {
   if (!image || !image.url) {
-    console.error("Tentativa de adicionar imagem sem URL à galeria");
+    console.error("Tentativa de adicionar imagem sem URL Ã  galeria");
     return;
   }
 
@@ -1255,7 +1255,7 @@ function addImageToGallery(image, prompt) {
     </div>
   `;
   
-  // Adiciona event listeners para os botões
+  // Adiciona event listeners para os botÃµes
   imageCard.querySelector('.download-image').addEventListener('click', (e) => {
     const url = e.currentTarget.getAttribute('data-url');
     const id = e.currentTarget.getAttribute('data-id');
@@ -1267,27 +1267,27 @@ function addImageToGallery(image, prompt) {
     window.open(url, '_blank');
   });
   
-  // Adiciona o card à galeria
+  // Adiciona o card Ã  galeria
   if (elements && elements.gallery) {
     elements.gallery.appendChild(imageCard);
   } else {
-    // Tenta adicionar à galeria pelo ID como alternativa
+    // Tenta adicionar Ã  galeria pelo ID como alternativa
     const galleryElement = document.getElementById('image-gallery');
     if (galleryElement) {
       galleryElement.appendChild(imageCard);
     } else {
-      console.error("Elemento gallery não encontrado para adicionar imagem");
+      console.error("Elemento gallery nÃ£o encontrado para adicionar imagem");
     }
   }
   
-  // Mostra o botão de download se houver pelo menos uma imagem
+  // Mostra o botÃ£o de download se houver pelo menos uma imagem
   if (elements && elements.downloadAllButton && state && state.generatedImages.length > 0) {
     elements.downloadAllButton.classList.remove('hidden');
   }
 }
 
 /**
- * Baixa uma única imagem
+ * Baixa uma Ãºnica imagem
  * @param {string} url - URL da imagem
  * @param {string} id - ID da imagem
  */
@@ -1308,16 +1308,16 @@ async function downloadSingleImage(url, id) {
     // Libera o objeto URL
     URL.revokeObjectURL(downloadUrl);
     
-    showNotification('Download concluído!', 'success');
+    showNotification('Download concluÃ­do!', 'success');
   } catch (error) {
     showNotification(`Erro ao baixar: ${error.message}`, 'error');
   }
 }
 
 /**
- * Trunca um texto para um comprimento máximo
+ * Trunca um texto para um comprimento mÃ¡ximo
  * @param {string} text - Texto a ser truncado
- * @param {number} maxLength - Comprimento máximo
+ * @param {number} maxLength - Comprimento mÃ¡ximo
  * @returns {string} Texto truncado
  */
 function truncateText(text, maxLength) {
@@ -1326,15 +1326,15 @@ function truncateText(text, maxLength) {
 }
 
 /**
- * Mostra uma notificação para o usuário
+ * Mostra uma notificaÃ§Ã£o para o usuÃ¡rio
  * @param {string} message - Mensagem a ser exibida
- * @param {string} type - Tipo de notificação (success, error, warning, info)
+ * @param {string} type - Tipo de notificaÃ§Ã£o (success, error, warning, info)
  */
 function showNotification(message, type = 'info') {
-  // Procura por uma notificação existente
+  // Procura por uma notificaÃ§Ã£o existente
   let notification = document.querySelector('.notification');
   
-  // Se não existir, cria uma nova
+  // Se nÃ£o existir, cria uma nova
   if (!notification) {
     notification = document.createElement('div');
     notification.className = 'notification';
@@ -1344,7 +1344,7 @@ function showNotification(message, type = 'info') {
   // Define a classe de acordo com o tipo
   notification.className = `notification ${type}`;
   
-  // Define o conteúdo
+  // Define o conteÃºdo
   notification.innerHTML = `
     <div class="notification-content">
       <i class="fas ${getNotificationIcon(type)}"></i>
@@ -1352,19 +1352,19 @@ function showNotification(message, type = 'info') {
     </div>
   `;
   
-  // Mostra a notificação
+  // Mostra a notificaÃ§Ã£o
   notification.classList.add('show');
   
-  // Remove após 3 segundos
+  // Remove apÃ³s 3 segundos
   setTimeout(() => {
     notification.classList.remove('show');
   }, 3000);
 }
 
 /**
- * Retorna o ícone adequado para o tipo de notificação
- * @param {string} type - Tipo de notificação
- * @returns {string} Classe do ícone FontAwesome
+ * Retorna o Ã­cone adequado para o tipo de notificaÃ§Ã£o
+ * @param {string} type - Tipo de notificaÃ§Ã£o
+ * @returns {string} Classe do Ã­cone FontAwesome
  */
 function getNotificationIcon(type) {
   switch (type) {
@@ -1380,15 +1380,15 @@ function getNotificationIcon(type) {
  * Processa uma lista de prompts e gera imagens para cada um
  * @param {Array<string>} prompts - Lista de prompts para gerar imagens
  * @param {string} modelId - ID do modelo a ser usado
- * @param {Object} dimensions - Dimensões das imagens {width, height}
- * @param {number} numImages - Número de imagens a serem geradas
+ * @param {Object} dimensions - DimensÃµes das imagens {width, height}
+ * @param {number} numImages - NÃºmero de imagens a serem geradas
  * @param {Function} onProgress - Callback para atualizar o progresso
  * @param {Function} onImageGenerated - Callback chamado quando uma imagem for gerada
- * @returns {Promise<{success: number, failed: number}>} - Estatísticas da geração
+ * @returns {Promise<{success: number, failed: number}>} - EstatÃ­sticas da geraÃ§Ã£o
  */
 async function processPrompts(prompts, modelId, dimensions, numImages, onProgress, onImageGenerated) {
   let stats = { success: 0, failed: 0 };
-  // Inicializa a variável de cancelamento
+  // Inicializa a variÃ¡vel de cancelamento
   window.cancelGeneration = false;
   
   // Configura a chave da API
@@ -1397,7 +1397,7 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
   // Processa cada prompt sequencialmente
   for (let i = 0; i < prompts.length; i++) {
     if (window.cancelGeneration) {
-      console.log('Processo de geração cancelado');
+      console.log('Processo de geraÃ§Ã£o cancelado');
       break;
     }
     
@@ -1409,26 +1409,26 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
       const progress = Math.floor(((i + 1) / prompts.length) * 100);
       onProgress(progress, `Gerando imagem ${i + 1} de ${prompts.length}: "${truncateText(prompt, 30)}"`);
       
-      // Cria um placeholder para a imagem que será gerada
+      // Cria um placeholder para a imagem que serÃ¡ gerada
       const placeholderId = addImagePlaceholder(prompt);
       
-      // Validações fortes antes de enviar para a API
+      // ValidaÃ§Ãµes fortes antes de enviar para a API
       if (!prompt || !modelId || !dimensions.width || !dimensions.height) {
-        console.error('Parâmetros obrigatórios ausentes:',
+        console.error('ParÃ¢metros obrigatÃ³rios ausentes:',
           !prompt ? 'prompt ' : '',
           !modelId ? 'modelId ' : '',
           !dimensions.width ? 'width ' : '',
           !dimensions.height ? 'height ' : ''
         );
-        updatePlaceholderStatus(placeholderId, 'Erro: Parâmetros obrigatórios faltando', 'error');
+        updatePlaceholderStatus(placeholderId, 'Erro: ParÃ¢metros obrigatÃ³rios faltando', 'error');
         stats.failed++;
         continue;
       }
       
       if (parseInt(numImages) > 4) {
-        console.warn('Número de imagens limitado a 4. Valor ajustado.');
+        console.warn('NÃºmero de imagens limitado a 4. Valor ajustado.');
         numImages = 4;
-        showNotification('Máximo de 4 imagens por prompt permitido.', 'warning');
+        showNotification('MÃ¡ximo de 4 imagens por prompt permitido.', 'warning');
       }
       
       // Define o payload para a API
@@ -1444,48 +1444,48 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
       // Adiciona prompt negativo se estiver preenchido
       const negativePrompt = elements.negativePrompt?.value?.trim();
       if (negativePrompt) {
-        console.log(`💥 Adicionando prompt negativo ao payload: "${negativePrompt}"`);
+        console.log(`ðŸ’¥ Adicionando prompt negativo ao payload: "${negativePrompt}"`);
         payload.negative_prompt = negativePrompt;
         
-        // Verificação dupla para garantir que foi adicionado
+        // VerificaÃ§Ã£o dupla para garantir que foi adicionado
         if (payload.negative_prompt) {
-          console.log('✅ Prompt negativo adicionado com sucesso ao payload');
+          console.log('âœ… Prompt negativo adicionado com sucesso ao payload');
         } else {
-          console.warn('⚠️ Falha ao adicionar prompt negativo ao payload');
+          console.warn('âš ï¸ Falha ao adicionar prompt negativo ao payload');
         }
       } else {
-        console.log('⚠️ Nenhum prompt negativo fornecido pelo usuário');
+        console.log('âš ï¸ Nenhum prompt negativo fornecido pelo usuÃ¡rio');
       }
       
-      // Verifica se Flux está ativo e adiciona parâmetros necessários
+      // Verifica se Flux estÃ¡ ativo e adiciona parÃ¢metros necessÃ¡rios
       if (elements.fluxCheckbox && elements.fluxCheckbox.checked) {
-        // Verifica se o modelo é compatível com Flux
+        // Verifica se o modelo Ã© compatÃ­vel com Flux
         const fluxModelIds = [
           'b2614463-296c-462a-9586-aafdb8f00e36', // Flux Dev (Flux Precision)
           '1dd50843-d653-4516-a8e3-f0238ee453ff'  // Flux Schnell (Flux Speed)
         ];
         
         if (!fluxModelIds.includes(modelId)) {
-          updatePlaceholderStatus(placeholderId, 'Erro: Modelo selecionado não é compatível com Flux', 'error');
-          showNotification('error', 'Modelo selecionado não é compatível com Flux. Use Flux Dev ou Flux Schnell.');
+          updatePlaceholderStatus(placeholderId, 'Erro: Modelo selecionado nÃ£o Ã© compatÃ­vel com Flux', 'error');
+          showNotification('error', 'Modelo selecionado nÃ£o Ã© compatÃ­vel com Flux. Use Flux Dev ou Flux Schnell.');
           stats.failed++;
           continue;
         }
         
-        // Configura dimensões recomendadas para Flux
+        // Configura dimensÃµes recomendadas para Flux
         payload.width = 1472;
         payload.height = 832;
         
-        // Adiciona o contraste (obrigatório para Flux)
+        // Adiciona o contraste (obrigatÃ³rio para Flux)
         const validContrasts = [1.0, 1.3, 1.8, 2.5, 3, 3.5, 4, 4.5];
-        let selectedContrast = 3.5; // valor médio padrão
+        let selectedContrast = 3.5; // valor mÃ©dio padrÃ£o
         
         if (elements.fluxContrast && elements.fluxContrast.value) {
           const parsedContrast = parseFloat(elements.fluxContrast.value);
           if (validContrasts.includes(parsedContrast)) {
             selectedContrast = parsedContrast;
           } else {
-            console.warn('Valor de contraste inválido para Flux, utilizando 3.5 (Médio)');
+            console.warn('Valor de contraste invÃ¡lido para Flux, utilizando 3.5 (MÃ©dio)');
           }
         }
         
@@ -1505,27 +1505,27 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
         if (elements.fluxStyle && elements.fluxStyle.value) {
           payload.styleUUID = elements.fluxStyle.value;
         } else {
-          // Define o estilo Dynamic como padrão
+          // Define o estilo Dynamic como padrÃ£o
           payload.styleUUID = '111dc692-d470-4eec-b791-3475abac4c46';
         }
       }
-      // Verifica se Phoenix está ativo e adiciona parâmetros necessários
+      // Verifica se Phoenix estÃ¡ ativo e adiciona parÃ¢metros necessÃ¡rios
       else if (elements.phoenixCheckbox && elements.phoenixCheckbox.checked) {
         // Adiciona o contraste
         if (elements.phoenixContrast && elements.phoenixContrast.value) {
           payload.contrast = parseFloat(elements.phoenixContrast.value);
         } else {
-          payload.contrast = 3.5; // valor médio padrão
+          payload.contrast = 3.5; // valor mÃ©dio padrÃ£o
         }
         
         // Adiciona modo Alchemy (Quality Mode)
         if (elements.phoenixAlchemyCheckbox && elements.phoenixAlchemyCheckbox.checked) {
           payload.alchemy = true;
           
-          // Garantir que o contraste é adequado para Alchemy
+          // Garantir que o contraste Ã© adequado para Alchemy
           if (payload.contrast < 2.5) {
             payload.contrast = 2.5;
-            console.warn('Ajustando contraste para 2.5 (mínimo para Alchemy)');
+            console.warn('Ajustando contraste para 2.5 (mÃ­nimo para Alchemy)');
           }
         }
         
@@ -1544,9 +1544,9 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
           payload.styleUUID = elements.phoenixStyle.value;
         }
       }
-      // Verifica se PhotoReal está ativo e adiciona parâmetros necessários
+      // Verifica se PhotoReal estÃ¡ ativo e adiciona parÃ¢metros necessÃ¡rios
       else if (elements.photoRealCheckbox && elements.photoRealCheckbox.checked) {
-        // Adiciona parâmetros do PhotoReal v2
+        // Adiciona parÃ¢metros do PhotoReal v2
         payload.photoReal = true;
         payload.photoRealVersion = "v2";
         payload.alchemy = true;
@@ -1560,10 +1560,10 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
       console.log("Enviando payload para a API:", JSON.stringify(payload, null, 2));
       
       try {
-        // Inicia a geração e obtém o ID da geração
+        // Inicia a geraÃ§Ã£o e obtÃ©m o ID da geraÃ§Ã£o
         const generation = await window.leonardoAPI.generateImage(payload);
         
-        // Extrai o ID da geração com verificação de diferentes formatos de resposta
+        // Extrai o ID da geraÃ§Ã£o com verificaÃ§Ã£o de diferentes formatos de resposta
         let generationId;
         if (generation && generation.sdGenerationJob && generation.sdGenerationJob.generationId) {
           generationId = generation.sdGenerationJob.generationId;
@@ -1572,15 +1572,15 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
         } else if (generation && generation.data && generation.data.id) {
           generationId = generation.data.id;
         } else {
-          throw new Error('Formato de resposta desconhecido da API de geração');
+          throw new Error('Formato de resposta desconhecido da API de geraÃ§Ã£o');
         }
         
-        console.log(`Geração iniciada com ID: ${generationId}`);
+        console.log(`GeraÃ§Ã£o iniciada com ID: ${generationId}`);
         
-        // Verifica o status até que seja concluído
+        // Verifica o status atÃ© que seja concluÃ­do
         let isComplete = false;
         let statusCheckCount = 0;
-        const maxStatusChecks = 30;  // Máximo de verificações (60 segundos em total com espera de 2s)
+        const maxStatusChecks = 30;  // MÃ¡ximo de verificaÃ§Ãµes (60 segundos em total com espera de 2s)
         
         while (!isComplete && !window.cancelGeneration && statusCheckCount < maxStatusChecks) {
           await new Promise(resolve => setTimeout(resolve, 2000)); // Espera 2 segundos
@@ -1593,7 +1593,7 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
             let status = null;
             let generatedImages = [];
             
-            // Formato da documentação oficial (nova versão): campos status e generated_images no nível raiz
+            // Formato da documentaÃ§Ã£o oficial (nova versÃ£o): campos status e generated_images no nÃ­vel raiz
             if (statusResult.status) {
               status = statusResult.status;
               
@@ -1619,13 +1619,13 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
             } else {
               console.error("Formato de resposta desconhecido para status:", statusResult);
               updatePlaceholderStatus(placeholderId, 'Formato de resposta desconhecido', 'error');
-              throw new Error("Não foi possível determinar o status da geração");
+              throw new Error("NÃ£o foi possÃ­vel determinar o status da geraÃ§Ã£o");
             }
             
             if (!status) {
               console.error("Formato de resposta desconhecido para status:", statusResult);
               updatePlaceholderStatus(placeholderId, 'Formato de resposta desconhecido', 'error');
-              throw new Error("Não foi possível determinar o status da geração");
+              throw new Error("NÃ£o foi possÃ­vel determinar o status da geraÃ§Ã£o");
             }
             
             isComplete = status === "COMPLETE";
@@ -1635,12 +1635,12 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
             updatePlaceholderProgress(placeholderId, progress);
             
             if (isComplete) {
-              // Se a geração foi bem-sucedida e há imagens
+              // Se a geraÃ§Ã£o foi bem-sucedida e hÃ¡ imagens
               if (generatedImages && generatedImages.length > 0) {
                 // Pega a primeira imagem da lista
                 const image = generatedImages[0];
                 
-                // Adiciona a imagem à galeria
+                // Adiciona a imagem Ã  galeria
                 addImageToGallery({
                   url: image.url,
                   id: image.id || generationId
@@ -1662,15 +1662,15 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
               }
             }
           } catch (statusError) {
-            console.error(`Erro ao verificar status da geração (tentativa ${statusCheckCount}):`, statusError);
-            // Continua tentando nas próximas iterações
+            console.error(`Erro ao verificar status da geraÃ§Ã£o (tentativa ${statusCheckCount}):`, statusError);
+            // Continua tentando nas prÃ³ximas iteraÃ§Ãµes
           }
         }
         
         // Se saiu do loop sem completar
         if (!isComplete) {
           if (window.cancelGeneration) {
-            updatePlaceholderStatus(placeholderId, 'Geração cancelada', 'warning');
+            updatePlaceholderStatus(placeholderId, 'GeraÃ§Ã£o cancelada', 'warning');
             stats.failed++;
           } else {
             updatePlaceholderStatus(placeholderId, 'Tempo limite excedido', 'error');
@@ -1689,21 +1689,21 @@ async function processPrompts(prompts, modelId, dimensions, numImages, onProgres
     }
   }
   
-  // Limpa a função de cancelamento
+  // Limpa a funÃ§Ã£o de cancelamento
   window.cancelGeneration = null;
   
   return stats;
 }
 
 /**
- * Obtém o ID do modelo selecionado
+ * ObtÃ©m o ID do modelo selecionado
  * @returns {string|null} ID do modelo selecionado ou null se nenhum modelo foi selecionado
  */
 function getSelectedModelId() {
   const modelSelect = document.getElementById('model-select');
   
   if (!modelSelect) {
-    console.error("Elemento model-select não encontrado");
+    console.error("Elemento model-select nÃ£o encontrado");
     return null;
   }
   
@@ -1712,7 +1712,7 @@ function getSelectedModelId() {
 
 /**
  * Atualiza a barra de progresso
- * @param {number} percentage - Porcentagem de conclusão (0-100)
+ * @param {number} percentage - Porcentagem de conclusÃ£o (0-100)
  * @param {string} message - Mensagem a ser exibida
  */
 function updateProgressBar(percentage, message) {
@@ -1725,10 +1725,10 @@ function updateProgressBar(percentage, message) {
   }
   
   if (progressText) {
-    progressText.textContent = message || `${percentage}% concluído`;
+    progressText.textContent = message || `${percentage}% concluÃ­do`;
   }
   
-  // Também atualiza outros elementos de progresso na interface
+  // TambÃ©m atualiza outros elementos de progresso na interface
   if (elements && elements.progressBar) {
     elements.progressBar.style.width = `${percentage}%`;
   }
@@ -1741,11 +1741,11 @@ function updateProgressBar(percentage, message) {
 }
 
 /**
- * Atualiza a interface para o modo de geração
- * @param {boolean} isGenerating - Se está gerando imagens
+ * Atualiza a interface para o modo de geraÃ§Ã£o
+ * @param {boolean} isGenerating - Se estÃ¡ gerando imagens
  */
 function updateInterfaceForGeneration(isGenerating) {
-  // Obtém os elementos e verifica se existem antes de manipulá-los
+  // ObtÃ©m os elementos e verifica se existem antes de manipulÃ¡-los
   const generationProgress = document.getElementById('generation-progress');
   const generationStatus = document.getElementById('generation-status');
   const generateButton = document.getElementById('generate-button');
@@ -1780,17 +1780,17 @@ function updateInterfaceForGeneration(isGenerating) {
 function clearGeneratedImages() {
   const galleryElement = document.getElementById('gallery');
   
-  // Limpa a lista de imagens no estado da aplicação
+  // Limpa a lista de imagens no estado da aplicaÃ§Ã£o
   if (state) {
     state.generatedImages = [];
   }
   
-  // Remove apenas os elementos que não são placeholders
+  // Remove apenas os elementos que nÃ£o sÃ£o placeholders
   if (galleryElement) {
     const itemsToRemove = galleryElement.querySelectorAll('.gallery-item:not(.placeholder)');
     itemsToRemove.forEach(item => item.remove());
   } else {
-    console.error("Elemento gallery não encontrado");
+    console.error("Elemento gallery nÃ£o encontrado");
   }
 }
 
@@ -1801,19 +1801,19 @@ function clearGeneratedImages() {
 function updateSampleRequest(modelId) {
   // Verifica se o elemento sampleRequest existe
   if (!elements || !elements.sampleRequest) {
-    console.log("Elemento sampleRequest não encontrado, ignorando atualização");
+    console.log("Elemento sampleRequest nÃ£o encontrado, ignorando atualizaÃ§Ã£o");
     return;
   }
   
-  // Obtém valores dos campos
-  const prompt = "uma bela floresta ao pôr do sol";
+  // ObtÃ©m valores dos campos
+  const prompt = "uma bela floresta ao pÃ´r do sol";
   const dimensions = getSelectedDimensions() || { width: 1024, height: 1024 };
   const numImages = elements.numImages ? parseInt(elements.numImages.value) || 1 : 1;
   const guidanceScale = elements.guidanceScale ? parseFloat(elements.guidanceScale.value) || 7 : 7;
   const negativePrompt = elements.negativePrompt ? elements.negativePrompt.value : "";
   const seed = elements.seed ? (elements.seed.value ? parseInt(elements.seed.value) : null) : null;
   
-  // Cria o objeto de payload básico
+  // Cria o objeto de payload bÃ¡sico
   const payload = {
     prompt: prompt,
     modelId: modelId || "Selecione um modelo acima",
@@ -1833,7 +1833,7 @@ function updateSampleRequest(modelId) {
     payload.seed = seed;
   }
   
-  // Adiciona configurações específicas do Phoenix se estiver selecionado
+  // Adiciona configuraÃ§Ãµes especÃ­ficas do Phoenix se estiver selecionado
   if (elements.phoenixCheckbox && elements.phoenixCheckbox.checked) {
     if (elements.phoenixContrast) {
       payload.contrast = parseFloat(elements.phoenixContrast.value);
@@ -1856,7 +1856,7 @@ function updateSampleRequest(modelId) {
     }
   }
   
-  // Adiciona configurações específicas do Flux se estiver selecionado
+  // Adiciona configuraÃ§Ãµes especÃ­ficas do Flux se estiver selecionado
   if (elements.fluxCheckbox && elements.fluxCheckbox.checked) {
     if (elements.fluxContrast) {
       payload.contrast = parseFloat(elements.fluxContrast.value);
@@ -1875,19 +1875,19 @@ function updateSampleRequest(modelId) {
     }
   }
   
-  // Adiciona configurações específicas do PhotoReal se estiver selecionado
+  // Adiciona configuraÃ§Ãµes especÃ­ficas do PhotoReal se estiver selecionado
   if (elements.photoRealCheckbox && elements.photoRealCheckbox.checked) {
     if (elements.photoRealStyle && elements.photoRealStyle.value) {
       payload.presetStyle = elements.photoRealStyle.value;
     }
   }
   
-  // Atualiza o conteúdo do elemento
+  // Atualiza o conteÃºdo do elemento
   elements.sampleRequest.textContent = JSON.stringify(payload, null, 2);
 }
 
 /**
- * Adiciona um placeholder para uma imagem em processo de geração
+ * Adiciona um placeholder para uma imagem em processo de geraÃ§Ã£o
  * @param {string} prompt - O prompt usado para gerar a imagem
  * @returns {string} - ID do placeholder criado
  */
@@ -1910,8 +1910,8 @@ function addImagePlaceholder(prompt) {
   if (galleryElement) {
     galleryElement.appendChild(placeholder);
   } else {
-    console.error("Elemento gallery não encontrado ao adicionar placeholder");
-    // Tenta adicionar ao elemento gallery da variável elements como alternativa
+    console.error("Elemento gallery nÃ£o encontrado ao adicionar placeholder");
+    // Tenta adicionar ao elemento gallery da variÃ¡vel elements como alternativa
     if (elements && elements.gallery) {
       elements.gallery.appendChild(placeholder);
     } else {
@@ -1958,8 +1958,8 @@ function updatePlaceholderProgress(id, progress) {
 }
 
 /**
- * Extrai prompts da área de texto
- * @returns {Array<string>} Lista de prompts válidos
+ * Extrai prompts da Ã¡rea de texto
+ * @returns {Array<string>} Lista de prompts vÃ¡lidos
  */
 function getPrompts() {
   const promptsText = elements.promptsTextarea.value.trim();
@@ -1968,23 +1968,23 @@ function getPrompts() {
     return [];
   }
   
-  // Divide os prompts em linhas não vazias
+  // Divide os prompts em linhas nÃ£o vazias
   const promptsList = promptsText.split('\n')
     .map(prompt => prompt.trim())
     .filter(prompt => prompt.length > 0);
     
-  console.log(`Extraídos ${promptsList.length} prompts válidos`);
+  console.log(`ExtraÃ­dos ${promptsList.length} prompts vÃ¡lidos`);
   
   return promptsList;
 }
 
 /**
- * Cancela o processo de geração em andamento
+ * Cancela o processo de geraÃ§Ã£o em andamento
  */
 function cancelGeneration() {
-  console.log("Cancelando geração de imagens...");
+  console.log("Cancelando geraÃ§Ã£o de imagens...");
   window.cancelGeneration = true;
-  showNotification('info', 'Cancelando geração... Aguarde a finalização da imagem atual.');
+  showNotification('info', 'Cancelando geraÃ§Ã£o... Aguarde a finalizaÃ§Ã£o da imagem atual.');
   
   // Atualiza o status
   const statusElement = document.getElementById('generation-status');
@@ -1992,11 +1992,11 @@ function cancelGeneration() {
     statusElement.textContent = 'Cancelando...';
     statusElement.classList.add('cancelling');
   } else {
-    console.error("Elemento generation-status não encontrado");
+    console.error("Elemento generation-status nÃ£o encontrado");
   }
 }
 
-// Inicializa a aplicação quando o documento estiver pronto
+// Inicializa a aplicaÃ§Ã£o quando o documento estiver pronto
 document.addEventListener('DOMContentLoaded', function() {
   initializeApp();
 });
@@ -2025,8 +2025,8 @@ async function enviarModelosParaProxy() {
   ];
 
   try {
-    // Não enviamos modelos diretamente para o proxy, ao invés disso carregamos via GET
-    // Isso é mais robusto e evita possíveis erros de comunicação
+    // NÃ£o enviamos modelos diretamente para o proxy, ao invÃ©s disso carregamos via GET
+    // Isso Ã© mais robusto e evita possÃ­veis erros de comunicaÃ§Ã£o
     console.log('Carregando modelos diretamente do proxy via GET...');
     const response = await fetch('/proxy/models');
     
@@ -2034,7 +2034,7 @@ async function enviarModelosParaProxy() {
       console.warn(`O proxy retornou status ${response.status} ao buscar modelos. Usando modelos locais.`);
       
       // Caso o carregamento falhe, podemos usar os modelos definidos localmente
-      // ao chamar a função loadModels()
+      // ao chamar a funÃ§Ã£o loadModels()
       loadModels();
       return;
     }
@@ -2042,32 +2042,32 @@ async function enviarModelosParaProxy() {
     const responseData = await response.json();
     console.log(`Modelos recebidos do proxy: ${responseData.models ? responseData.models.length : 0}`);
     
-    // Se o proxy já tem os modelos, não precisamos fazer mais nada
+    // Se o proxy jÃ¡ tem os modelos, nÃ£o precisamos fazer mais nada
   } catch (err) {
-    console.error('❌ Erro ao comunicar com o proxy de modelos:', err);
+    console.error('âŒ Erro ao comunicar com o proxy de modelos:', err);
     
     // Em caso de erro, carregamos os modelos localmente
     setTimeout(() => {
-      console.log('Iniciando carregamento de modelos local após falha no proxy...');
+      console.log('Iniciando carregamento de modelos local apÃ³s falha no proxy...');
       loadModels();
     }, 500);
   }
 }
 
-// Chama a função quando o DOM estiver carregado
+// Chama a funÃ§Ã£o quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
   enviarModelosParaProxy();
 });
 
 /**
- * Configura o toggle e os listeners para as opções do PhotoReal
+ * Configura o toggle e os listeners para as opÃ§Ãµes do PhotoReal
  */
 function setupPhotoRealToggle() {
   console.log("Configurando PhotoReal Toggle...");
   
-  // Verifica se os elementos necessários existem
+  // Verifica se os elementos necessÃ¡rios existem
   if (!elements.photoRealCheckbox || !elements.photoRealOptions) {
-    console.log("Elementos PhotoReal não encontrados na página");
+    console.log("Elementos PhotoReal nÃ£o encontrados na pÃ¡gina");
     return;
   }
   
@@ -2077,7 +2077,7 @@ function setupPhotoRealToggle() {
       elements.photoRealOptions.classList.toggle('active', this.checked);
     }
     
-    // Quando PhotoReal é marcado, desmarca Phoenix e Flux para evitar conflitos
+    // Quando PhotoReal Ã© marcado, desmarca Phoenix e Flux para evitar conflitos
     if (this.checked) {
       if (elements.phoenixCheckbox) {
         elements.phoenixCheckbox.checked = false;
@@ -2094,14 +2094,14 @@ function setupPhotoRealToggle() {
       }
     }
     
-    // Atualiza o exemplo de requisição
+    // Atualiza o exemplo de requisiÃ§Ã£o
     updateSampleRequest(elements.modelSelect.value);
   });
   
   // Configura o evento para o estilo do PhotoReal
   if (elements.photoRealStyle) {
     elements.photoRealStyle.addEventListener('change', function() {
-      // Atualiza o exemplo de requisição
+      // Atualiza o exemplo de requisiÃ§Ã£o
       updateSampleRequest(elements.modelSelect.value);
     });
   }
@@ -2110,14 +2110,14 @@ function setupPhotoRealToggle() {
 }
 
 /**
- * Configura o toggle e os listeners para as opções do Phoenix
+ * Configura o toggle e os listeners para as opÃ§Ãµes do Phoenix
  */
 function setupPhoenixToggle() {
   console.log("Configurando Phoenix Toggle...");
   
-  // Verifica se os elementos necessários existem
+  // Verifica se os elementos necessÃ¡rios existem
   if (!elements.phoenixCheckbox || !elements.phoenixOptions) {
-    console.log("Elementos Phoenix não encontrados na página");
+    console.log("Elementos Phoenix nÃ£o encontrados na pÃ¡gina");
     return;
   }
   
@@ -2127,7 +2127,7 @@ function setupPhoenixToggle() {
       elements.phoenixOptions.classList.toggle('active', this.checked);
     }
     
-    // Quando Phoenix é marcado, desmarca PhotoReal e Flux para evitar conflitos
+    // Quando Phoenix Ã© marcado, desmarca PhotoReal e Flux para evitar conflitos
     if (this.checked) {
       if (elements.photoRealCheckbox) {
         elements.photoRealCheckbox.checked = false;
@@ -2144,14 +2144,14 @@ function setupPhoenixToggle() {
       }
     }
     
-    // Atualiza o exemplo de requisição
+    // Atualiza o exemplo de requisiÃ§Ã£o
     updateSampleRequest(elements.modelSelect.value);
   });
   
   // Configura o evento para o contraste
   if (elements.phoenixContrast) {
     elements.phoenixContrast.addEventListener('change', function() {
-      // Validação para o modo Alchemy
+      // ValidaÃ§Ã£o para o modo Alchemy
       if (elements.phoenixAlchemyCheckbox && elements.phoenixAlchemyCheckbox.checked) {
         const contrast = parseFloat(this.value);
         if (contrast < 2.5) {
@@ -2160,7 +2160,7 @@ function setupPhoenixToggle() {
         }
       }
       
-      // Atualiza o exemplo de requisição
+      // Atualiza o exemplo de requisiÃ§Ã£o
       updateSampleRequest(elements.modelSelect.value);
     });
   }
@@ -2168,7 +2168,7 @@ function setupPhoenixToggle() {
   // Configura o evento para o alchemy
   if (elements.phoenixAlchemyCheckbox) {
     elements.phoenixAlchemyCheckbox.addEventListener('change', function() {
-      // Verifica se o contraste é adequado quando alchemy é ativado
+      // Verifica se o contraste Ã© adequado quando alchemy Ã© ativado
       if (this.checked && elements.phoenixContrast) {
         const contrast = parseFloat(elements.phoenixContrast.value);
         if (contrast < 2.5) {
@@ -2177,7 +2177,7 @@ function setupPhoenixToggle() {
         }
       }
       
-      // Atualiza o exemplo de requisição
+      // Atualiza o exemplo de requisiÃ§Ã£o
       updateSampleRequest(elements.modelSelect.value);
     });
   }
@@ -2185,7 +2185,7 @@ function setupPhoenixToggle() {
   // Configura o evento para o ultra mode
   if (elements.phoenixUltraCheckbox) {
     elements.phoenixUltraCheckbox.addEventListener('change', function() {
-      // Atualiza o exemplo de requisição
+      // Atualiza o exemplo de requisiÃ§Ã£o
       updateSampleRequest(elements.modelSelect.value);
     });
   }
@@ -2193,7 +2193,7 @@ function setupPhoenixToggle() {
   // Configura o evento para o enhance prompt
   if (elements.phoenixEnhancePromptCheckbox) {
     elements.phoenixEnhancePromptCheckbox.addEventListener('change', function() {
-      // Atualiza o exemplo de requisição
+      // Atualiza o exemplo de requisiÃ§Ã£o
       updateSampleRequest(elements.modelSelect.value);
     });
   }
@@ -2201,7 +2201,7 @@ function setupPhoenixToggle() {
   // Configura o evento para o estilo
   if (elements.phoenixStyle) {
     elements.phoenixStyle.addEventListener('change', function() {
-      // Atualiza o exemplo de requisição
+      // Atualiza o exemplo de requisiÃ§Ã£o
       updateSampleRequest(elements.modelSelect.value);
     });
   }
@@ -2210,14 +2210,14 @@ function setupPhoenixToggle() {
 }
 
 /**
- * Configura o toggle e os listeners para as opções do Flux
+ * Configura o toggle e os listeners para as opÃ§Ãµes do Flux
  */
 function setupFluxToggle() {
   console.log("Configurando Flux Toggle...");
   
-  // Verifica se os elementos necessários existem
+  // Verifica se os elementos necessÃ¡rios existem
   if (!elements.fluxCheckbox || !elements.fluxOptions) {
-    console.log("Elementos Flux não encontrados na página");
+    console.log("Elementos Flux nÃ£o encontrados na pÃ¡gina");
     return;
   }
   
@@ -2227,7 +2227,7 @@ function setupFluxToggle() {
       elements.fluxOptions.classList.toggle('active', this.checked);
     }
     
-    // Quando Flux é marcado, desmarca Phoenix e PhotoReal para evitar conflitos
+    // Quando Flux Ã© marcado, desmarca Phoenix e PhotoReal para evitar conflitos
     if (this.checked) {
       if (elements.phoenixCheckbox) {
         elements.phoenixCheckbox.checked = false;
@@ -2244,7 +2244,7 @@ function setupFluxToggle() {
       }
     }
     
-    // Atualiza o exemplo de requisição
+    // Atualiza o exemplo de requisiÃ§Ã£o
     updateSampleRequest(elements.modelSelect.value);
   });
   
@@ -2255,13 +2255,13 @@ function setupFluxToggle() {
       const validContrasts = [1.0, 1.3, 1.8, 2.5, 3, 3.5, 4, 4.5];
       const selectedContrast = parseFloat(this.value);
       
-      // Verifica se o valor é válido, caso contrário usa 3.5 (Médio)
+      // Verifica se o valor Ã© vÃ¡lido, caso contrÃ¡rio usa 3.5 (MÃ©dio)
       if (!validContrasts.includes(selectedContrast)) {
-        console.warn("Valor de contraste inválido para Flux, definindo para 3.5 (Médio)");
+        console.warn("Valor de contraste invÃ¡lido para Flux, definindo para 3.5 (MÃ©dio)");
         this.value = "3.5";
       }
       
-      // Atualiza o exemplo de requisição
+      // Atualiza o exemplo de requisiÃ§Ã£o
       updateSampleRequest(elements.modelSelect.value);
     });
   }
@@ -2269,7 +2269,7 @@ function setupFluxToggle() {
   // Configura o evento para o enhance prompt
   if (elements.fluxEnhancePromptCheckbox) {
     elements.fluxEnhancePromptCheckbox.addEventListener('change', function() {
-      // Atualiza o exemplo de requisição
+      // Atualiza o exemplo de requisiÃ§Ã£o
       updateSampleRequest(elements.modelSelect.value);
     });
   }
@@ -2277,7 +2277,7 @@ function setupFluxToggle() {
   // Configura o evento para o ultra mode
   if (elements.fluxUltraCheckbox) {
     elements.fluxUltraCheckbox.addEventListener('change', function() {
-      // Atualiza o exemplo de requisição
+      // Atualiza o exemplo de requisiÃ§Ã£o
       updateSampleRequest(elements.modelSelect.value);
     });
   }
@@ -2285,7 +2285,7 @@ function setupFluxToggle() {
   // Configura o evento para o estilo
   if (elements.fluxStyle) {
     elements.fluxStyle.addEventListener('change', function() {
-      // Atualiza o exemplo de requisição
+      // Atualiza o exemplo de requisiÃ§Ã£o
       updateSampleRequest(elements.modelSelect.value);
     });
   }
@@ -2301,11 +2301,11 @@ function setupModelSelectEvents() {
   
   // Verifica se o elemento modelSelect existe
   if (!elements.modelSelect) {
-    console.error("Elemento modelSelect não encontrado");
+    console.error("Elemento modelSelect nÃ£o encontrado");
     return;
   }
   
-  // Evento change para quando o modelo é alterado
+  // Evento change para quando o modelo Ã© alterado
   elements.modelSelect.addEventListener('change', function() {
     const selectedModel = this.value;
     console.log(`Modelo selecionado: ${selectedModel}`);
@@ -2313,7 +2313,7 @@ function setupModelSelectEvents() {
     // Verifica a compatibilidade dos checkboxes (Phoenix, PhotoReal, Flux) com o modelo selecionado
     checkModelCompatibility(selectedModel);
     
-    // Atualiza o exemplo de requisição
+    // Atualiza o exemplo de requisiÃ§Ã£o
     updateSampleRequest(selectedModel);
   });
   
@@ -2321,26 +2321,26 @@ function setupModelSelectEvents() {
 }
 
 /**
- * Verifica a compatibilidade do modelo selecionado com as opções Phoenix, PhotoReal e Flux
+ * Verifica a compatibilidade do modelo selecionado com as opÃ§Ãµes Phoenix, PhotoReal e Flux
  * @param {string} modelId - ID do modelo selecionado
  */
 function checkModelCompatibility(modelId) {
   if (!modelId) return;
   
-  // Modelos compatíveis com Phoenix
+  // Modelos compatÃ­veis com Phoenix
   const phoenixModelIds = [
     'de7d3faf-762f-48e0-b3b7-9d0ac3a3fcf3', // Leonardo Phoenix 1.0
     '6b645e3a-d64f-4341-a6d8-7a3690fbf042'  // Leonardo Phoenix 0.9
   ];
   
-  // Modelos compatíveis com PhotoReal
+  // Modelos compatÃ­veis com PhotoReal
   const photoRealModelIds = [
     'aa77f04e-3eec-4034-9c07-d0f619684628', // Leonardo Kino XL
     '5c232a9e-9061-4777-980a-ddc8e65647c6', // Leonardo Vision XL
     '1e60896f-3c26-4296-8ecc-53e2afecc132'  // Leonardo Diffusion XL
   ];
   
-  // Modelos compatíveis com Flux
+  // Modelos compatÃ­veis com Flux
   const fluxModelIds = [
     'b2614463-296c-462a-9586-aafdb8f00e36', // Flux Dev (Flux Precision)
     '1dd50843-d653-4516-a8e3-f0238ee453ff'  // Flux Schnell (Flux Speed)
@@ -2349,53 +2349,53 @@ function checkModelCompatibility(modelId) {
   // Verifica e ajusta o Phoenix
   if (elements.phoenixCheckbox && elements.phoenixCheckbox.checked) {
     if (!phoenixModelIds.includes(modelId)) {
-      console.warn(`Modelo ${modelId} não é compatível com Phoenix. Desmarcando.`);
+      console.warn(`Modelo ${modelId} nÃ£o Ã© compatÃ­vel com Phoenix. Desmarcando.`);
       elements.phoenixCheckbox.checked = false;
       if (elements.phoenixOptions) {
         elements.phoenixOptions.classList.remove('active');
       }
-      showNotification('warning', 'O modelo selecionado não é compatível com Phoenix. A opção foi desmarcada.');
+      showNotification('warning', 'O modelo selecionado nÃ£o Ã© compatÃ­vel com Phoenix. A opÃ§Ã£o foi desmarcada.');
     }
   }
   
   // Verifica e ajusta o PhotoReal
   if (elements.photoRealCheckbox && elements.photoRealCheckbox.checked) {
     if (!photoRealModelIds.includes(modelId)) {
-      console.warn(`Modelo ${modelId} não é compatível com PhotoReal. Desmarcando.`);
+      console.warn(`Modelo ${modelId} nÃ£o Ã© compatÃ­vel com PhotoReal. Desmarcando.`);
       elements.photoRealCheckbox.checked = false;
       if (elements.photoRealOptions) {
         elements.photoRealOptions.classList.remove('active');
       }
-      showNotification('warning', 'O modelo selecionado não é compatível com PhotoReal. A opção foi desmarcada.');
+      showNotification('warning', 'O modelo selecionado nÃ£o Ã© compatÃ­vel com PhotoReal. A opÃ§Ã£o foi desmarcada.');
     }
   }
   
   // Verifica e ajusta o Flux
   if (elements.fluxCheckbox && elements.fluxCheckbox.checked) {
     if (!fluxModelIds.includes(modelId)) {
-      console.warn(`Modelo ${modelId} não é compatível com Flux. Desmarcando.`);
+      console.warn(`Modelo ${modelId} nÃ£o Ã© compatÃ­vel com Flux. Desmarcando.`);
       elements.fluxCheckbox.checked = false;
       if (elements.fluxOptions) {
         elements.fluxOptions.classList.remove('active');
       }
-      showNotification('warning', 'O modelo selecionado não é compatível com Flux. A opção foi desmarcada.');
+      showNotification('warning', 'O modelo selecionado nÃ£o Ã© compatÃ­vel com Flux. A opÃ§Ã£o foi desmarcada.');
     }
   }
 }
 
 /**
- * Configura o seletor de dimensões da imagem
+ * Configura o seletor de dimensÃµes da imagem
  */
 function setupDimensionSelect() {
-  console.log("Configurando select de dimensões...");
+  console.log("Configurando select de dimensÃµes...");
   
   // Verifica se o elemento presetDimensions existe
   if (!elements.presetDimensions) {
-    console.error("Elemento presetDimensions não encontrado");
+    console.error("Elemento presetDimensions nÃ£o encontrado");
     return;
   }
   
-  // Inicializa com as dimensões predefinidas
+  // Inicializa com as dimensÃµes predefinidas
   const presetDimensions = [
     { width: 512, height: 512, label: "512 x 512 (1:1 Quadrado)" },
     { width: 768, height: 768, label: "768 x 768 (1:1 Quadrado)" },
@@ -2410,20 +2410,20 @@ function setupDimensionSelect() {
     { width: 576, height: 1024, label: "576 x 1024 (9:16 Retrato)" },
     { width: 768, height: 1344, label: "768 x 1344 (9:16 Retrato)" },
     { width: 1080, height: 1920, label: "1080 x 1920 (9:16 Retrato)" },
-    // Dimensões recomendadas para Flux
+    // DimensÃµes recomendadas para Flux
     { width: 1472, height: 832, label: "1472 x 832 (Recomendado para Flux)" }
   ];
   
   // Limpa o select
   elements.presetDimensions.innerHTML = '';
   
-  // Adiciona uma opção vazia/padrão
+  // Adiciona uma opÃ§Ã£o vazia/padrÃ£o
   const defaultOption = document.createElement('option');
   defaultOption.value = '';
-  defaultOption.textContent = 'Selecione uma dimensão';
+  defaultOption.textContent = 'Selecione uma dimensÃ£o';
   elements.presetDimensions.appendChild(defaultOption);
   
-  // Adiciona as dimensões predefinidas
+  // Adiciona as dimensÃµes predefinidas
   presetDimensions.forEach(dimension => {
     const option = document.createElement('option');
     option.value = `${dimension.width}:${dimension.height}`;
@@ -2431,19 +2431,19 @@ function setupDimensionSelect() {
     elements.presetDimensions.appendChild(option);
   });
   
-  // Seleciona a primeira dimensão por padrão
+  // Seleciona a primeira dimensÃ£o por padrÃ£o
   elements.presetDimensions.value = '1024:1024';
   
-  // Adiciona o event listener para mudanças
+  // Adiciona o event listener para mudanÃ§as
   elements.presetDimensions.addEventListener('change', function() {
-    console.log(`Dimensões alteradas para: ${this.value}`);
+    console.log(`DimensÃµes alteradas para: ${this.value}`);
   });
   
-  console.log("Select de dimensões configurado com sucesso");
+  console.log("Select de dimensÃµes configurado com sucesso");
 }
 
 /**
- * Configura os sliders de intervalo da aplicação
+ * Configura os sliders de intervalo da aplicaÃ§Ã£o
  */
 function setupRangeSliders() {
   console.log("Configurando sliders de intervalo...");
