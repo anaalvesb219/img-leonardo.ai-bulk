@@ -1,5 +1,15 @@
 /* Estilos para a visualização da galeria (grade e lista) */
 
+/* Definição das variáveis CSS para garantir compatibilidade */
+:root {
+  --primary-color: #6366f1;
+  --primary-hover: #4f46e5;
+  --info-color: #3b82f6;
+  --error-color: #ef4444;
+  --dark-color: #1f2937;
+  --border-radius: 8px;
+}
+
 /* Estilos para os controles de visualização da galeria */
 .gallery-controls {
   display: flex;
@@ -85,7 +95,17 @@
 .gallery-list .prompt-text {
   color: var(--dark-color);
   margin-bottom: 15px;
+  display: -webkit-box;
+  display: -moz-box;
+  display: box;
+  -webkit-box-orient: vertical;
+  -moz-box-orient: vertical;
+  box-orient: vertical;
   -webkit-line-clamp: 3;
+  -moz-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gallery-list .image-actions {
@@ -138,4 +158,4 @@
   .gallery-list .image-card img {
     border-radius: var(--border-radius) var(--border-radius) 0 0;
   }
-} 
+}
